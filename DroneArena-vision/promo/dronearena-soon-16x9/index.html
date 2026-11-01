@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Drone Arena coming soon</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0d0820;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0d0820;
+      }
+      .scene,
+      .shot,
+      .inner {
+        position: absolute;
+        inset: 0;
+      }
+      .shot {
+        overflow: hidden;
+      }
+      .shot video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 58% 50%;
+      }
+      .flash {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        background: radial-gradient(circle at 50% 50%, #ffffff 0%, #ffe2c4 45%, #ff8a1f 100%);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="15" data-width="1920" data-height="1080">
+      <div id="intro" class="scene" data-composition-id="intro" data-composition-src="compositions/intro.html" data-start="0" data-duration="2.8" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="outro" class="scene" data-composition-id="outro" data-composition-src="compositions/outro.html" data-start="11.9" data-duration="3.1" data-track-index="1" data-width="1920" data-height="1080"></div>
+
+      <div class="shot" id="shot-ff"><div class="inner" data-layout-allow-overflow><video id="v-ff" class="clip" src="assets/freeflight.mp4" data-start="2.8" data-duration="9.1" data-media-start="6.6" data-playback-rate="1.6" data-track-index="2" muted playsinline></video></div></div>
+
+      <div id="hud" class="scene" data-composition-id="hud" data-composition-src="compositions/hud.html" data-start="0" data-duration="15" data-track-index="3" data-width="1920" data-height="1080"></div>
+      <div class="flash" id="flash"></div>
+
+      <audio id="music" src="assets/music-kodama-night-town.mp3" data-start="0" data-duration="15" data-media-start="6.2" data-track-index="20" data-volume="0.85" data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":0.3,"v":1},{"t":13.6,"v":1},{"t":15,"v":0}]}]}'></audio>
+      <audio id="sfx-intro-sparkle" src=".media/audio/sfx/sfx_004.mp3" data-start="0.05" data-duration="1.6" data-track-index="30" data-volume="0.35"></audio>
+      <audio id="sfx-intro-pop" src=".media/audio/sfx/sfx_007.mp3" data-start="0.38" data-duration="0.7" data-track-index="31" data-volume="0.3"></audio>
+      <audio id="sfx-intro-whoosh" src=".media/audio/sfx/sfx_001.mp3" data-start="2.5" data-duration="0.6" data-track-index="32" data-volume="0.35"></audio>
+      <audio id="sfx-chip-1" src=".media/audio/sfx/sfx_006.mp3" data-start="3.45" data-duration="0.4" data-track-index="33" data-volume="0.35"></audio>
+      <audio id="sfx-chip-2" src=".media/audio/sfx/sfx_006.mp3" data-start="7.65" data-duration="0.4" data-track-index="34" data-volume="0.35"></audio>
+      <audio id="sfx-outro-whoosh" src=".media/audio/sfx/sfx_001.mp3" data-start="11.74" data-duration="0.6" data-track-index="35" data-volume="0.3"></audio>
+      <audio id="sfx-outro-sparkle" src=".media/audio/sfx/sfx_004.mp3" data-start="11.92" data-duration="1.6" data-track-index="36" data-volume="0.3"></audio>
+      <audio id="sfx-badge-chime" src=".media/audio/sfx/sfx_005.mp3" data-start="13.1" data-duration="1.9" data-track-index="37" data-volume="0.7"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      // Intro -> room: out of the white.
+      tl.set("#flash", { opacity: 1 }, 2.8);
+      tl.to("#flash", { opacity: 0, duration: 0.4, ease: "power2.out" }, 2.82);
+      tl.fromTo("#shot-ff .inner", { scale: 1.14 }, { scale: 1.0, duration: 9.1, ease: "power1.out" }, 2.8);
+      // Room -> outro.
+      tl.fromTo("#flash", { opacity: 0.9 }, { opacity: 0, duration: 0.35, ease: "power2.out", immediateRender: false }, 11.9);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

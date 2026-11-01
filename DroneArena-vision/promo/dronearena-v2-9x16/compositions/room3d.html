@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #room3d-root { position: absolute; inset: 0; overflow: hidden; background: #ece8df; container-type: size; }
+        #room3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+        #room3d-copy { z-index: 2; position: absolute; left: 5cqw; top: 8cqh; display: flex; flex-direction: column; gap: 1.4cqmin; }
+        .r3-kicker { font-family: "Space Mono", monospace; font-weight: 700; font-size: calc(0.8cqw + 0.8cqh);
+          letter-spacing: 0.18em; color: #0c0c0e; text-transform: uppercase; }
+        .r3-line { display: block; overflow: hidden; }
+        .r3-line > span { display: inline-block; font-family: "League Gothic", sans-serif; font-size: calc(7cqw + 4cqh);
+          line-height: 0.92; color: #0c0c0e; text-transform: uppercase; letter-spacing: 0.005em; }
+        .r3-hl { display: inline-block; line-height: 0.92; background: #d4ff3a; padding: 0.04em 0.12em 0; }
+        @container (aspect-ratio < 1) {
+          #room3d-copy { left: 6cqw; right: 6cqw; top: 6cqh; }
+          .r3-line > span { font-size: calc(11cqw + 2cqh); }
+        }
+      </style>
+
+      <div id="room3d-root" data-composition-id="room3d" data-width="1080" data-height="1920">
+        <canvas id="room3d-canvas" data-ee-canvas="room3d" data-layout-bleed></canvas>
+        <div id="room3d-copy" data-layout-allow-occlusion>
+          <div class="r3-kicker" id="r3-kicker">Drone Arena / Apple Vision Pro</div>
+          <span class="r3-line" data-layout-allow-overflow><span>Your room</span></span>
+          <span class="r3-line" data-layout-allow-overflow><span>is the <span class="r3-hl">arena</span></span></span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const ID = "room3d";
+          const DUR = 2.927;
+          window.__eeTime = window.__eeTime || {};
+          window.__eeResolve = window.__eeResolve || {};
+          window.__hf = window.__hf || {};
+          window.__hf.buildReady = window.__hf.buildReady || {};
+          window.__hf.buildReady[ID] = new Promise((r) => (window.__eeResolve[ID] = r));
+          const st = { t: 0 };
+          const tl = gsap.timeline({ paused: true });
+          tl.to(st, { t: DUR, duration: DUR, ease: "none", onUpdate() {
+            window.__eeTime[ID] = st.t;
+            const f = window.__eeScenes && window.__eeScenes[ID];
+            if (f) f(st.t);
+          } }, 0);
+          tl.fromTo("#r3-kicker", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 0.15);
+          tl.fromTo(".r3-line > span", { yPercent: 105 }, { yPercent: 0, duration: 0.5, ease: "expo.out", stagger: 0.09 }, 0.2);
+          tl.to(".r3-line > span", { yPercent: -105, duration: 0.3, ease: "power3.in", stagger: 0.05 }, 1.95);
+          tl.to("#r3-kicker", { opacity: 0, duration: 0.2 }, 1.95);
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+      <script type="module">
+        import * as E from "./assets/scene3d.js";
+        import * as R from "./assets/room.js";
+        import * as P from "./assets/props.js";
+        const { THREE } = E;
+        const { canvas, root } = await E.findStage("room3d");
+        const { renderer, aspect } = E.makeRenderer(canvas, root);
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(50, aspect, 0.05, 100);
+        const room = R.buildRoom(scene);
+        room.ceiling.material.transparent = true;
+        const drone = P.makeDrone();
+        scene.add(drone.root);
+        // Footage handoff: freeflight @14.5s, drone at px (870,760) ~445px span.
+        const HAND = R.px(870, 760, 2.28);
+        const AFTER = R.px(985, 790, 1.85);
+        const path = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(-1.2, 0.9, -4.6),
+          new THREE.Vector3(0.6, 1.5, -4.2),
+          new THREE.Vector3(1.25, 1.9, -3.0),
+          new THREE.Vector3(0.2, 1.7, -2.4),
+          new THREE.Vector3(-1.0, 1.25, -3.1),
+          new THREE.Vector3(-0.9, 1.0, -2.6),
+          HAND,
+        ]);
+        const trail = P.makeTrail(path);
+        scene.add(trail.mesh);
+        const C0 = new THREE.Vector3(3.4, 7.2, 3.6), L0 = new THREE.Vector3(0, 0.4, -2.9);
+        const C1 = R.EYE.clone(), L1 = new THREE.Vector3(0, 1.473, -10);
+        const look = new THREE.Vector3(), ahead = new THREE.Vector3();
+        const LAND = 2.25, MATCH = 2.439;
+        function draw(t) {
+          const p = E.easeInOut(E.seg(t, 0, LAND));
+          camera.position.lerpVectors(C0, C1, p);
+          look.lerpVectors(L0, L1, p);
+          camera.lookAt(look);
+          camera.fov = E.lerp(50, R.FOV, p);
+          camera.updateProjectionMatrix();
+          room.ceiling.material.opacity = E.seg(t, LAND - 0.45, LAND);
+          room.ceiling.visible = room.ceiling.material.opacity > 0.01;
+          const k = E.easeInOut(E.seg(t, 0, MATCH));
+          if (t <= MATCH) {
+            path.getPointAt(k, drone.root.position);
+            path.getPointAt(Math.min(1, k + 0.02), ahead);
+          } else {
+            const q = E.easeIn(E.seg(t, MATCH, 2.927));
+            drone.root.position.lerpVectors(HAND, AFTER, q);
+            ahead.copy(AFTER);
+          }
+          const yaw = Math.atan2(-(ahead.x - drone.root.position.x), -(ahead.z - drone.root.position.z));
+          const settle = E.seg(t, 1.9, MATCH);
+          drone.root.rotation.set(E.lerp(-0.3, 0.12, settle), E.lerp(yaw, -1.2, settle), E.lerp(0.35, 0.18, settle));
+          P.animateDrone(drone, t);
+          trail.reveal(Math.min(1, k + 0.001), Math.max(0, k - 0.45));
+          renderer.render(scene, camera);
+        }
+        E.registerScene("room3d", draw);
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #room-root { position: absolute; inset: 0; overflow: hidden; background: #0d0820; container-type: size; }
+        #room-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+        #room-scrim { position: absolute; inset: 0; z-index: 1;
+          background: linear-gradient(to bottom, rgba(13, 8, 32, 0.72) 0%, rgba(13, 8, 32, 0) 32%); }
+        #room-copy { z-index: 2; position: absolute; left: 0; right: 0; top: 7cqh; display: flex;
+          flex-direction: column; align-items: center; gap: 1.6cqmin; padding: 0 6cqw; text-align: center; }
+        .room-kicker { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: calc(1.1cqw + 1cqh);
+          letter-spacing: 0.24em; color: #38e6f5; }
+        .room-title { font-family: "Archivo Black", sans-serif; font-size: calc(4.4cqw + 3.2cqh); line-height: 1;
+          letter-spacing: -0.035em; color: #f2ecdd; text-transform: uppercase; display: flex; flex-wrap: wrap;
+          justify-content: center; column-gap: 0.26em; max-width: 92cqw; }
+        .room-w { display: block; overflow: hidden; padding-bottom: 0.06em; }
+        .room-w > span { display: block; }
+        .room-glow { color: #ff8a1f; text-shadow: 0 0 0.35em rgba(255, 138, 31, 0.55); }
+      </style>
+
+      <div id="room-root" data-composition-id="room" data-width="1920" data-height="1080">
+        <canvas id="room-canvas" data-ee-canvas="room" data-layout-bleed></canvas>
+        <div id="room-scrim"></div>
+        <div id="room-copy">
+          <div class="room-kicker" id="room-kicker">DRONE ARENA / FREE FLIGHT</div>
+          <div class="room-title" data-layout-allow-occlusion>
+            <span class="room-w" data-layout-allow-overflow><span>Your</span></span>
+            <span class="room-w" data-layout-allow-overflow><span>room</span></span>
+            <span class="room-w" data-layout-allow-overflow><span>is</span></span>
+            <span class="room-w" data-layout-allow-overflow><span>the</span></span>
+            <span class="room-w" data-layout-allow-overflow><span class="room-glow">runway.</span></span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const ID = "room";
+          const DUR = 2.8;
+          window.__eeTime = window.__eeTime || {};
+          window.__eeResolve = window.__eeResolve || {};
+          window.__hf = window.__hf || {};
+          window.__hf.buildReady = window.__hf.buildReady || {};
+          window.__hf.buildReady[ID] = new Promise((r) => (window.__eeResolve[ID] = r));
+          const st = { t: 0 };
+          const tl = gsap.timeline({ paused: true });
+          tl.to(st, { t: DUR, duration: DUR, ease: "none", onUpdate() {
+            window.__eeTime[ID] = st.t;
+            const f = window.__eeScenes && window.__eeScenes[ID];
+            if (f) f(st.t);
+          } }, 0);
+          tl.fromTo("#room-kicker", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.08);
+          tl.fromTo(".room-w > span", { yPercent: 110 }, { yPercent: 0, duration: 0.45, ease: "expo.out", stagger: 0.06 }, 0.15);
+          tl.to(".room-w > span", { yPercent: -110, duration: 0.28, ease: "power3.in", stagger: 0.035 }, 2.2);
+          tl.to("#room-kicker", { opacity: 0, duration: 0.22 }, 2.2);
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+      <script type="module">
+        import * as E from "./assets/scene3d.js";
+        import * as D from "./assets/drone3d.js";
+        const { THREE } = E;
+        const { canvas, root } = await E.findStage("room");
+        const { renderer, aspect } = E.makeRenderer(canvas, root);
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(D.VOID, 9, 26);
+        const camera = new THREE.PerspectiveCamera(E.fovFor(aspect, 40, 52), aspect, 0.05, 200);
+        D.addLights(scene);
+        // Wireframe living room on a neon grid; the drone carves a loop and lands on
+        // the framing of footage shot 1 (drone at 1220,790 r220 on 1920x1080).
+        const room = new THREE.Group();
+        scene.add(room);
+        const floor = D.makeGridFloor(8, 16, D.CYAN, 0.35);
+        room.add(floor);
+        const shell = D.edges(7, 3, 9, D.CYAN, 0.55);
+        shell.position.set(0, 1.5, -1.5);
+        room.add(shell);
+        const furniture = [
+          [2.4, 0.5, 0.9, 0, 0.25, 1.0, D.HEAT],
+          [1.6, 0.45, 0.8, 0, 0.22, -0.4, D.HEAT],
+          [1.5, 0.9, 0.08, 0, 1.0, -5.9, D.CYAN],
+          [1.8, 0.4, 0.5, 0, 0.2, -5.6, D.CYAN],
+          [0.5, 2.2, 1.6, 3.2, 1.1, -3.0, D.CYAN],
+          [0.7, 0.6, 0.7, -2.9, 0.3, 0.2, D.HEAT],
+        ];
+        for (const [w, h, d, x, y, z, c] of furniture) {
+          const e = D.edges(w, h, d, c, 0.8);
+          e.position.set(x, y, z);
+          room.add(e);
+        }
+        const drone = D.makeDrone();
+        drone.root.scale.setScalar(1.9);
+        scene.add(drone.root);
+        const path = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(-2.6, 2.3, -5.2),
+          new THREE.Vector3(-0.8, 2.0, -3.6),
+          new THREE.Vector3(1.9, 1.7, -2.6),
+          new THREE.Vector3(1.6, 1.25, -0.9),
+          new THREE.Vector3(0.598, 0.926, 0.19),
+        ]);
+        const C_END = new THREE.Vector3(0, 1.5, 3.6);
+        const C_START = new THREE.Vector3(-1.6, 3.4, 7.5);
+        const LAND = 2.3;
+        const tmp = new THREE.Vector3();
+        function draw(t) {
+          const p = E.easeInOut(E.seg(t, 0, LAND));
+          camera.position.lerpVectors(C_START, C_END, p);
+          const look = tmp.set(E.lerp(-0.6, 0, p), E.lerp(1.0, 1.5, p), E.lerp(-2.5, 2.6, p));
+          camera.lookAt(look);
+          const k = E.easeOut(E.seg(t, 0, LAND));
+          path.getPointAt(k, drone.root.position);
+          const ahead = path.getPointAt(Math.min(1, k + 0.02));
+          const yawTravel = Math.atan2(-(ahead.x - drone.root.position.x), -(ahead.z - drone.root.position.z));
+          const face = E.seg(t, 1.6, LAND);
+          drone.root.rotation.set(E.lerp(-0.35, -0.12, face), E.lerp(yawTravel, 2.6, E.easeInOut(face)), E.lerp(0.25, 0, face));
+          D.animateDrone(drone, t);
+          shell.material.opacity = 0.55 * (1 - 0.6 * E.seg(t, 1.8, LAND));
+          floor.material.opacity = 0.35 * (1 - 0.5 * E.seg(t, 1.8, LAND));
+          renderer.render(scene, camera);
+        }
+        E.registerScene("room", draw);
+      </script>
+    </template>
+  </body>
+</html>

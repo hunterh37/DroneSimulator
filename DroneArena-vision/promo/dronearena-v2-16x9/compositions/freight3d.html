@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #freight3d-root { position: absolute; inset: 0; overflow: hidden; background: #ece8df; container-type: size; }
+        #freight3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+        #freight3d-copy { z-index: 2; position: absolute; left: 5cqw; top: 8cqh; display: flex; flex-direction: column; gap: 1.2cqmin; }
+        .fr-num { font-family: "Space Mono", monospace; font-weight: 700; font-size: calc(0.8cqw + 0.8cqh);
+          letter-spacing: 0.18em; color: #0c0c0e; text-transform: uppercase; }
+        .fr-num b { background: #0c0c0e; color: #d4ff3a; padding: 0.25em 0.55em; margin-right: 0.8em; }
+        .fr-line { display: block; overflow: hidden; }
+        .fr-line > span { display: inline-block; font-family: "League Gothic", sans-serif; font-size: calc(7cqw + 4cqh);
+          line-height: 0.92; color: #0c0c0e; text-transform: uppercase; letter-spacing: 0.005em; }
+        .fr-hl { display: inline-block; line-height: 0.92; background: #d4ff3a; padding: 0.04em 0.12em 0; }
+        @container (aspect-ratio < 1) {
+          #freight3d-copy { left: 6cqw; right: 6cqw; top: 6cqh; }
+          .fr-line > span { font-size: calc(11cqw + 2cqh); }
+        }
+      </style>
+      <div id="freight3d-root" data-composition-id="freight3d" data-width="1920" data-height="1080">
+        <canvas id="freight3d-canvas" data-ee-canvas="freight3d" data-layout-bleed></canvas>
+        <div id="freight3d-copy" data-layout-allow-occlusion>
+          <div class="fr-num" id="fr-num"><b>03</b>Mode / Fold Freight</div>
+          <span class="fr-line" data-layout-allow-overflow><span>Cargo</span></span>
+          <span class="fr-line" data-layout-allow-overflow><span>drops <span class="fr-hl">in</span></span></span>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const ID = "freight3d";
+          const DUR = 2.927;
+          window.__eeTime = window.__eeTime || {};
+          window.__eeResolve = window.__eeResolve || {};
+          window.__hf = window.__hf || {};
+          window.__hf.buildReady = window.__hf.buildReady || {};
+          window.__hf.buildReady[ID] = new Promise((r) => (window.__eeResolve[ID] = r));
+          const st = { t: 0 };
+          const tl = gsap.timeline({ paused: true });
+          tl.to(st, { t: DUR, duration: DUR, ease: "none", onUpdate() {
+            window.__eeTime[ID] = st.t;
+            const f = window.__eeScenes && window.__eeScenes[ID];
+            if (f) f(st.t);
+          } }, 0);
+          tl.fromTo("#fr-num", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 0.3);
+          tl.fromTo("#freight3d-copy .fr-line > span", { yPercent: 105 }, { yPercent: 0, duration: 0.45, ease: "expo.out", stagger: 0.08 }, 0.35);
+          tl.to("#freight3d-copy .fr-line > span", { yPercent: -105, duration: 0.28, ease: "power3.in", stagger: 0.05 }, 2.1);
+          tl.to("#fr-num", { opacity: 0, duration: 0.2 }, 2.1);
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+      <script type="module">
+        import * as E from "./assets/scene3d.js";
+        import * as R from "./assets/room.js";
+        import * as P from "./assets/props.js";
+        import * as K from "./assets/modekit.js";
+        const { THREE } = E;
+        const { renderer, scene, camera, room, drone } = await K.setup("freight3d");
+        // Delivery pads on the floor, crates dropping from the ceiling onto them.
+        const padSpots = [[-0.9, -2.0], [0.15, -1.25], [1.1, -2.2]];
+        const pads = padSpots.map(([x, z], i) => {
+          const p = P.makePad(P.CARGO[i]);
+          p.root.position.set(x, 0.01, z);
+          scene.add(p.root);
+          return { p, at: 0.35 + i * 0.12 };
+        });
+        const rand = E.rng(5);
+        const crates = [];
+        for (let i = 0; i < 9; i++) {
+          const c = P.makeCrate(P.CARGO[i % 3]);
+          const x = -1.6 + rand() * 3.2, z = -4.8 + rand() * 2.4;
+          scene.add(c);
+          crates.push({ c, x, z, at: 0.45 + i * 0.09, spin: rand() * 3 });
+        }
+        const carry = P.makeCrate(P.CARGO[1]);
+        scene.add(carry);
+        const HAND = R.px(950, 940, 2.21);
+        const path = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(1.2, 1.7, -4.6), new THREE.Vector3(0.2, 1.2, -4.0), new THREE.Vector3(-0.8, 0.9, -3.0),
+          new THREE.Vector3(-0.9, 0.6, -2.2), HAND,
+        ]);
+        const trail = P.makeTrail(path, 0.012);
+        scene.add(trail.mesh);
+        const OFF = new THREE.Vector3(0.0, 1.6, 0.6), FOCUS = new THREE.Vector3(0, 0.3, -3.0);
+        const MATCH = 2.439;
+        const tmp = new THREE.Vector3();
+        function draw(t) {
+          for (const { p, at } of pads) {
+            const k = E.backOut(E.seg(t, at, at + 0.35));
+            p.root.scale.setScalar(Math.max(0.0001, k));
+            p.beam.scale.y = Math.max(0.0001, E.easeOut(E.seg(t, at + 0.1, at + 0.5)));
+          }
+          for (const { c, x, z, at, spin } of crates) {
+            const k = E.seg(t, at, at + 0.42);
+            const fall = E.easeIn(k);
+            const bounce = k >= 1 ? Math.abs(Math.sin((t - at - 0.42) * 14)) * Math.exp(-(t - at - 0.42) * 9) * 0.12 : 0;
+            c.position.set(x, 2.5 - 2.39 * fall + bounce, z);
+            c.rotation.set(spin * (1 - fall), spin * 0.5 * (1 - fall), 0);
+            c.visible = t > at;
+          }
+          K.cameraArc(camera, t, 0.25, MATCH - 0.1, OFF, FOCUS);
+          const k = E.easeInOut(E.seg(t, 0.1, MATCH));
+          K.flyDrone(drone, path, k, t, 0.6);
+          if (t > MATCH - 0.15) drone.root.rotation.set(0.1, 0, 0);
+          carry.position.copy(drone.root.position).add(tmp.set(0, -0.2, 0));
+          carry.visible = t > 0.6;
+          trail.reveal(Math.min(1, k + 0.001), Math.max(0, k - 0.35));
+          renderer.render(scene, camera);
+        }
+        E.registerScene("freight3d", draw);
+      </script>
+    </template>
+  </body>
+</html>

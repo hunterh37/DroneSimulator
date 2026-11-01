@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #freight-root { position: absolute; inset: 0; overflow: hidden; background: #0d0820; container-type: size; }
+        #freight-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+        #freight-scrim { position: absolute; inset: 0; z-index: 1;
+          background: linear-gradient(to bottom, rgba(13, 8, 32, 0.72) 0%, rgba(13, 8, 32, 0) 32%); }
+        #freight-copy { z-index: 2; position: absolute; left: 0; right: 0; top: 7cqh; display: flex;
+          flex-direction: column; align-items: center; gap: 1.6cqmin; padding: 0 6cqw; text-align: center; }
+        .freight-kicker { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: calc(1.1cqw + 1cqh);
+          letter-spacing: 0.24em; color: #38e6f5; }
+        .freight-title { font-family: "Archivo Black", sans-serif; font-size: calc(4.4cqw + 3.2cqh); line-height: 1;
+          letter-spacing: -0.035em; color: #f2ecdd; text-transform: uppercase; display: flex; flex-wrap: wrap;
+          justify-content: center; column-gap: 0.26em; max-width: 92cqw; }
+        .freight-w { display: block; overflow: hidden; padding-bottom: 0.06em; }
+        .freight-w > span { display: block; }
+        .freight-glow { color: #ff8a1f; text-shadow: 0 0 0.35em rgba(255, 138, 31, 0.55); }
+      </style>
+
+      <div id="freight-root" data-composition-id="freight" data-width="1920" data-height="1080">
+        <canvas id="freight-canvas" data-ee-canvas="freight" data-layout-bleed></canvas>
+        <div id="freight-scrim"></div>
+        <div id="freight-copy">
+          <div class="freight-kicker" id="freight-kicker">FOLD FREIGHT / SORTATION</div>
+          <div class="freight-title" data-layout-allow-occlusion>
+            <span class="freight-w" data-layout-allow-overflow><span>Sort</span></span>
+            <span class="freight-w" data-layout-allow-overflow><span>the</span></span>
+            <span class="freight-w" data-layout-allow-overflow><span class="freight-glow">freight.</span></span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const ID = "freight";
+          const DUR = 2.23;
+          window.__eeTime = window.__eeTime || {};
+          window.__eeResolve = window.__eeResolve || {};
+          window.__hf = window.__hf || {};
+          window.__hf.buildReady = window.__hf.buildReady || {};
+          window.__hf.buildReady[ID] = new Promise((r) => (window.__eeResolve[ID] = r));
+          const st = { t: 0 };
+          const tl = gsap.timeline({ paused: true });
+          tl.to(st, { t: DUR, duration: DUR, ease: "none", onUpdate() {
+            window.__eeTime[ID] = st.t;
+            const f = window.__eeScenes && window.__eeScenes[ID];
+            if (f) f(st.t);
+          } }, 0);
+          tl.fromTo("#freight-kicker", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.08);
+          tl.fromTo(".freight-w > span", { yPercent: 110 }, { yPercent: 0, duration: 0.45, ease: "expo.out", stagger: 0.06 }, 0.15);
+          tl.to(".freight-w > span", { yPercent: -110, duration: 0.28, ease: "power3.in", stagger: 0.035 }, 1.75);
+          tl.to("#freight-kicker", { opacity: 0, duration: 0.22 }, 1.75);
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+      <script type="module">
+        import * as E from "./assets/scene3d.js";
+        import * as D from "./assets/drone3d.js";
+        const { THREE } = E;
+        const { canvas, root } = await E.findStage("freight");
+        const { renderer, aspect } = E.makeRenderer(canvas, root);
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(D.VOID, 9, 26);
+        const camera = new THREE.PerspectiveCamera(E.fovFor(aspect, 40, 52), aspect, 0.05, 200);
+        D.addLights(scene);
+        // Fold Freight: crates rain onto the grid, the drone hooks one and drops it on
+        // its matching pad, which pulses and stacks.
+        const rand = E.rng(5);
+        scene.add(D.makeGridFloor(30, 30, D.CYAN, 0.45));
+        const pads = D.CRATE_COLORS.map((c, i) => {
+          const p = D.makePad(c);
+          p.root.position.set(-1.6 + i * 1.6, 0.02, -2.6);
+          scene.add(p.root);
+          return p;
+        });
+        const crates = [];
+        for (let i = 0; i < 9; i++) {
+          const ci = i % 3;
+          const c = D.makeCrate(D.CRATE_COLORS[ci]);
+          const x = rand() * 3.4 - 1.7;
+          const z = rand() * 1.6 - 0.2;
+          c.userData = { x, z, drop: 0.05 + i * 0.07, rot: rand() * 3, ci };
+          scene.add(c);
+          crates.push(c);
+        }
+        const hero = D.makeCrate(D.CRATE_COLORS[1]);
+        scene.add(hero);
+        const drone = D.makeDrone();
+        scene.add(drone.root);
+        const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 1, 6), new THREE.MeshBasicMaterial({ color: "#f2ecdd" }));
+        scene.add(cable);
+        const burst = D.makeBurst(rand, ["#3d8bff", "#ffffff", "#38e6f5"]);
+        burst.root.position.set(0, 0.5, -2.6);
+        scene.add(burst.root);
+        const A = new THREE.Vector3(0.3, 1.25, 0.6);
+        const B = new THREE.Vector3(0, 1.35, -2.6);
+        function draw(t) {
+          for (const c of crates) {
+            const { x, z, drop, rot } = c.userData;
+            const k = E.seg(t, drop, drop + 0.42);
+            const bounce = k < 1 ? 0 : Math.max(0, Math.sin((t - drop - 0.42) * 14) * 0.05 * Math.exp(-(t - drop - 0.42) * 6));
+            c.position.set(x, E.lerp(4, 0.15, E.easeIn(k)) + bounce, z);
+            c.rotation.set(0, rot + (1 - k) * 2, 0);
+          }
+          const fly = E.easeInOut(E.seg(t, 0.75, 1.65));
+          drone.root.position.lerpVectors(A, B, fly);
+          drone.root.position.y += Math.sin(fly * Math.PI) * 0.35;
+          drone.root.rotation.set(E.lerp(0, -0.25, Math.sin(fly * Math.PI)), 0.2, 0);
+          D.animateDrone(drone, t);
+          const reach = E.lerp(0.75, 0.32, E.easeOut(E.seg(t, 0.45, 0.75)));
+          const released = t > 1.7;
+          const fall = E.easeIn(E.seg(t, 1.7, 1.95));
+          if (!released) hero.position.set(drone.root.position.x, drone.root.position.y - reach - 0.15, drone.root.position.z);
+          else hero.position.set(B.x, E.lerp(B.y - 0.47, 0.17, fall), B.z);
+          hero.rotation.y = 0.2;
+          cable.visible = !released;
+          cable.scale.y = reach;
+          cable.position.set(drone.root.position.x, drone.root.position.y - reach / 2, drone.root.position.z);
+          pads.forEach((p, i) => (p.beam.material.opacity = 0.16 + (i === 1 ? E.seg(t, 1.9, 2.0) * 0.5 * (1 - E.seg(t, 2.0, 2.23)) : 0)));
+          burst.update(E.seg(t, 1.93, 2.23));
+          camera.position.set(E.lerp(2.2, 1.2, E.easeInOut(E.seg(t, 0, 2.23))), 2.6, E.lerp(4.4, 3.2, E.easeInOut(E.seg(t, 0, 2.23))));
+          camera.lookAt(0, 0.7, -1.2);
+          renderer.render(scene, camera);
+        }
+        E.registerScene("freight", draw);
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #hud-root { position: absolute; inset: 0; overflow: hidden; pointer-events: none; container-type: size; }
+        #hud-live { position: absolute; left: 3.2cqw; top: 4.4cqh; display: flex; align-items: center; gap: 0.8em;
+          background: #0c0c0e; color: #ece8df; padding: 0.55em 0.9em; opacity: 0;
+          font-family: "Space Mono", monospace; font-weight: 700; font-size: calc(0.6cqw + 0.6cqh); letter-spacing: 0.2em; }
+        #hud-dot { width: 0.8em; height: 0.8em; border-radius: 50%; background: #d4ff3a; }
+        .hud-cap { position: absolute; left: 3.2cqw; bottom: 6cqh; display: flex; flex-direction: column; align-items: flex-start; gap: 0.6cqh; }
+        .hud-k { background: #d4ff3a; color: #0c0c0e; padding: 0.4em 0.8em; font-family: "Space Mono", monospace; font-weight: 700;
+          font-size: calc(0.6cqw + 0.6cqh); letter-spacing: 0.2em; text-transform: uppercase; }
+        .hud-l { display: block; overflow: hidden; }
+        .hud-l > span { display: inline-block; background: #0c0c0e; padding: 0.1em 0.22em 0; font-family: "League Gothic", sans-serif;
+          font-size: calc(3.4cqw + 2cqh); line-height: 1; color: #ece8df; text-transform: uppercase; }
+        @container (aspect-ratio < 1) {
+          #hud-live { left: 50%; transform: translateX(-50%); top: 3cqh; font-size: calc(2cqw + 0.4cqh); }
+          .hud-cap { left: 6cqw; right: 6cqw; bottom: 9cqh; align-items: center; }
+          .hud-k { font-size: calc(2cqw + 0.4cqh); }
+          .hud-l > span { font-size: calc(8.5cqw + 1cqh); }
+        }
+      </style>
+      <div id="hud-root" data-composition-id="hud" data-width="1920" data-height="1080">
+        <div id="hud-live"><span id="hud-dot"></span>REAL GAMEPLAY / VISION PRO</div>
+        <div class="hud-cap" id="cap-ff"><span class="hud-k">Free flight</span><span class="hud-l" data-layout-allow-overflow><span>Fly it around your room</span></span></div>
+        <div class="hud-cap" id="cap-ra"><span class="hud-k">Race League</span><span class="hud-l" data-layout-allow-overflow><span>Thread every gate</span></span></div>
+        <div class="hud-cap" id="cap-sa"><span class="hud-k">Safari</span><span class="hud-l" data-layout-allow-overflow><span>Chase bees through the trees</span></span></div>
+        <div class="hud-cap" id="cap-cr"><span class="hud-k">Fold Freight</span><span class="hud-l" data-layout-allow-overflow><span>Grab crates. Deliver them.</span></span></div>
+      </div>
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          gsap.set(".hud-k", { clipPath: "inset(0 100% 0 0)" });
+          gsap.set(".hud-l > span", { yPercent: 105 });
+          gsap.set(".hud-cap", { autoAlpha: 0 });
+          const live = [[5.95, 9.2], [11.8, 14.1], [17.15, 19.45], [22.5, 27.25]];
+          for (const [a, b] of live) {
+            tl.fromTo("#hud-live", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none", immediateRender: false }, a);
+            tl.to("#hud-live", { opacity: 0, duration: 0.15, ease: "none" }, b);
+          }
+          tl.fromTo("#hud-dot", { opacity: 1 }, { opacity: 0.25, duration: 0.45, ease: "sine.inOut", repeat: 33, yoyo: true }, 0);
+          const caps = [["#cap-ff", 6.2, 8.85], ["#cap-ra", 12.0, 13.75], ["#cap-sa", 17.35, 19.1], ["#cap-cr", 22.75, 24.95]];
+          for (const [sel, a, b] of caps) {
+            tl.fromTo(sel, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01, ease: "none", immediateRender: false }, a - 0.02);
+            tl.to(sel, { autoAlpha: 0, duration: 0.01, ease: "none" }, b + 0.3);
+            tl.to(sel + " .hud-k", { clipPath: "inset(0 0% 0 0)", duration: 0.3, ease: "expo.out" }, a);
+            tl.to(sel + " .hud-l > span", { yPercent: 0, duration: 0.42, ease: "expo.out" }, a + 0.08);
+            tl.to(sel + " .hud-l > span", { yPercent: -105, duration: 0.25, ease: "power3.in" }, b);
+            tl.to(sel + " .hud-k", { clipPath: "inset(0 0% 0 100%)", duration: 0.25, ease: "power3.in" }, b);
+          }
+          window.__timelines["hud"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

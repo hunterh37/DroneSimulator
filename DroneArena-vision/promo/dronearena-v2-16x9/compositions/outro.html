@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #outro-root { position: absolute; inset: 0; overflow: hidden; background: #ece8df; container-type: size; }
+        #ou-dots { position: absolute; inset: -10%; background-image: radial-gradient(#0c0c0e 1.2px, transparent 1.4px);
+          background-size: 2.4cqw 2.4cqw; opacity: 0.16; }
+        .ou-lockup { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 5cqw; padding: 0 6cqw; }
+        .ou-stage { perspective: 1400px; flex: none; }
+        #ou-ico { position: relative; width: 34cqmin; height: 34cqmin; transform-style: preserve-3d; }
+        .ou-layer { position: absolute; inset: 0; background-size: cover; background-position: center; border-radius: 50%; }
+        #ou-back { background-image: url("assets/icon-Back.png"); box-shadow: 0 0 0 0.7cqmin #0c0c0e, 1.6cqmin 1.6cqmin 0 0.7cqmin #0c0c0e; }
+        #ou-mid { background-image: url("assets/icon-Middle.png"); }
+        #ou-front { background-image: url("assets/icon-Front.png"); }
+        .ou-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2.2cqh; }
+        .ou-line { display: block; overflow: hidden; }
+        .ou-line > span { display: inline-block; font-family: "League Gothic", sans-serif; font-size: calc(9cqw + 4cqh);
+          line-height: 0.86; color: #0c0c0e; text-transform: uppercase; }
+        .ou-hl { background: #d4ff3a; padding: 0.03em 0.08em 0; }
+        #ou-tag { font-family: "Space Mono", monospace; font-weight: 700; font-size: calc(1cqw + 1cqh); color: #0c0c0e;
+          letter-spacing: 0.04em; }
+        #ou-badge { display: flex; align-items: center; gap: 0.9cqw; background: #0c0c0e; border-radius: 1.4cqmin;
+          padding: 1.4cqh 2.2cqw 1.4cqh 1.6cqw; box-shadow: 0.9cqmin 0.9cqmin 0 #d4ff3a; }
+        #ou-badge svg { width: calc(2.2cqw + 1.6cqh); height: calc(2.2cqw + 1.6cqh); }
+        .ou-btxt { display: flex; flex-direction: column; color: #ffffff; font-family: "Inter", sans-serif; line-height: 1; }
+        .ou-small { font-size: calc(0.55cqw + 0.6cqh); font-weight: 400; }
+        .ou-big { font-size: calc(1.5cqw + 1.4cqh); font-weight: 700; letter-spacing: -0.01em; margin-top: 0.15em; }
+        #ou-avp { font-family: "Space Mono", monospace; font-weight: 700; font-size: calc(0.7cqw + 0.7cqh);
+          letter-spacing: 0.24em; color: #0c0c0e; opacity: 0.7; }
+        @container (aspect-ratio < 1) {
+          .ou-lockup { flex-direction: column; gap: 4cqh; }
+          .ou-text { align-items: center; text-align: center; }
+          .ou-line > span { font-size: calc(19cqw + 2cqh); }
+          #ou-ico { width: 52cqmin; height: 52cqmin; }
+          #ou-tag { font-size: calc(2.6cqw + 0.6cqh); }
+          #ou-badge { padding: 1.6cqh 6cqw 1.6cqh 4.5cqw; gap: 2.4cqw; }
+          #ou-badge svg { width: calc(6cqw + 1cqh); height: calc(6cqw + 1cqh); }
+          .ou-small { font-size: calc(2cqw + 0.4cqh); }
+          .ou-big { font-size: calc(5cqw + 0.8cqh); }
+          #ou-avp { font-size: calc(2cqw + 0.4cqh); }
+        }
+      </style>
+      <div id="outro-root" data-composition-id="outro" data-width="1920" data-height="1080">
+        <div id="ou-dots"></div>
+        <div class="ou-lockup">
+          <div class="ou-stage">
+            <div id="ou-ico">
+              <div class="ou-layer" id="ou-back"></div>
+              <div class="ou-layer" id="ou-mid"></div>
+              <div class="ou-layer" id="ou-front"></div>
+            </div>
+          </div>
+          <div class="ou-text" data-layout-allow-occlusion>
+            <div>
+              <span class="ou-line" data-layout-allow-overflow><span>Drone</span></span>
+              <span class="ou-line" data-layout-allow-overflow><span class="ou-hl">Arena</span></span>
+            </div>
+            <div id="ou-tag">Race, explore and deliver in your own room.</div>
+            <div id="ou-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#ffffff" d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+              </svg>
+              <div class="ou-btxt"><span class="ou-small">Download on the</span><span class="ou-big">App Store</span></div>
+            </div>
+            <div id="ou-avp">APPLE VISION PRO</div>
+          </div>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          const S = document.querySelector("#ou-ico").offsetWidth || 367;
+          tl.fromTo("#ou-dots", { y: 0 }, { y: -80, duration: 4.39, ease: "none" }, 0);
+          tl.fromTo("#ou-ico", { rotationY: 40, rotationX: 16, scale: 0.6, opacity: 0 },
+            { rotationY: -12, rotationX: -4, scale: 1, opacity: 1, duration: 1.4, ease: "expo.out" }, 0.15);
+          tl.fromTo("#ou-back", { z: -500 }, { z: 0, duration: 0.8, ease: "expo.out" }, 0.2);
+          tl.fromTo("#ou-mid", { z: -400, opacity: 0 }, { z: S * 0.16, opacity: 1, duration: 0.8, ease: "expo.out" }, 0.3);
+          tl.fromTo("#ou-front", { yPercent: -130, z: S * 0.34, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.7, ease: "back.out(1.6)" }, 0.45);
+          tl.fromTo(".ou-line > span", { yPercent: 105 }, { yPercent: 0, duration: 0.55, ease: "expo.out", stagger: 0.1 }, 0.35);
+          tl.fromTo("#ou-tag", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.8);
+          tl.fromTo("#ou-badge", { opacity: 0, y: 24, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.8)" }, 1.15);
+          tl.fromTo("#ou-avp", { opacity: 0 }, { opacity: 0.7, duration: 0.4, ease: "none" }, 1.5);
+          tl.to("#ou-front", { y: -8, duration: 1.2, ease: "sine.inOut" }, 1.4);
+          window.__timelines["outro"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

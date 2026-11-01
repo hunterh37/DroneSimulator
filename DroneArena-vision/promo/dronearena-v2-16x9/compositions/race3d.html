@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #race3d-root { position: absolute; inset: 0; overflow: hidden; background: #ece8df; container-type: size; }
+        #race3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+        #race3d-copy { z-index: 2; position: absolute; left: 5cqw; top: 8cqh; display: flex; flex-direction: column; gap: 1.2cqmin; }
+        .ra-num { font-family: "Space Mono", monospace; font-weight: 700; font-size: calc(0.8cqw + 0.8cqh);
+          letter-spacing: 0.18em; color: #0c0c0e; text-transform: uppercase; }
+        .ra-num b { background: #0c0c0e; color: #d4ff3a; padding: 0.25em 0.55em; margin-right: 0.8em; }
+        .ra-line { display: block; overflow: hidden; }
+        .ra-line > span { display: inline-block; font-family: "League Gothic", sans-serif; font-size: calc(7cqw + 4cqh);
+          line-height: 0.92; color: #0c0c0e; text-transform: uppercase; letter-spacing: 0.005em; }
+        .ra-hl { display: inline-block; line-height: 0.92; background: #d4ff3a; padding: 0.04em 0.12em 0; }
+        @container (aspect-ratio < 1) {
+          #race3d-copy { left: 6cqw; right: 6cqw; top: 6cqh; }
+          .ra-line > span { font-size: calc(11cqw + 2cqh); }
+        }
+      </style>
+      <div id="race3d-root" data-composition-id="race3d" data-width="1920" data-height="1080">
+        <canvas id="race3d-canvas" data-ee-canvas="race3d" data-layout-bleed></canvas>
+        <div id="race3d-copy" data-layout-allow-occlusion>
+          <div class="ra-num" id="ra-num"><b>01</b>Mode / Race League</div>
+          <span class="ra-line" data-layout-allow-overflow><span>Gates rise</span></span>
+          <span class="ra-line" data-layout-allow-overflow><span>from the <span class="ra-hl">floor</span></span></span>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const ID = "race3d";
+          const DUR = 2.439;
+          window.__eeTime = window.__eeTime || {};
+          window.__eeResolve = window.__eeResolve || {};
+          window.__hf = window.__hf || {};
+          window.__hf.buildReady = window.__hf.buildReady || {};
+          window.__hf.buildReady[ID] = new Promise((r) => (window.__eeResolve[ID] = r));
+          const st = { t: 0 };
+          const tl = gsap.timeline({ paused: true });
+          tl.to(st, { t: DUR, duration: DUR, ease: "none", onUpdate() {
+            window.__eeTime[ID] = st.t;
+            const f = window.__eeScenes && window.__eeScenes[ID];
+            if (f) f(st.t);
+          } }, 0);
+          tl.fromTo("#ra-num", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 0.35);
+          tl.fromTo("#race3d-copy .ra-line > span", { yPercent: 105 }, { yPercent: 0, duration: 0.45, ease: "expo.out", stagger: 0.08 }, 0.4);
+          tl.to("#race3d-copy .ra-line > span", { yPercent: -105, duration: 0.28, ease: "power3.in", stagger: 0.05 }, 1.62);
+          tl.to("#ra-num", { opacity: 0, duration: 0.2 }, 1.62);
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+      <script type="module">
+        import * as E from "./assets/scene3d.js";
+        import * as R from "./assets/room.js";
+        import * as P from "./assets/props.js";
+        import * as K from "./assets/modekit.js";
+        const { THREE } = E;
+        const { renderer, scene, camera, room, drone } = await K.setup("race3d");
+        const rand = E.rng(7);
+        const slate = new THREE.Color("#3A3D47"), wood = room.mat.floor.color.clone();
+        // Grandstands along the back and left walls.
+        const stands = [];
+        for (const [x, z, ry, len] of [[0.1, -5.5, 0, 3.6], [-2.0, -3.3, Math.PI / 2, 2.8], [1.95, -4.4, -Math.PI / 2, 1.6]]) {
+          const s = P.makeStand(rand, len, 4);
+          s.position.set(x, 0, z);
+          s.rotation.y = ry;
+          scene.add(s);
+          stands.push(s);
+        }
+        // Gates; the last one is the race footage @15.0s gate (inner px 530..1082, 35..597 at z=2).
+        const spots = [[0.9, 1.3, -4.2, -0.3], [-0.9, 1.15, -3.4, 0.4], [0.6, 1.2, -2.9, -0.2], [-0.3, 1.914, -2.0, 0]];
+        const gates = spots.map(([x, y, z, ry], i) => {
+          const g = P.makeGate(1.09, y - 0.665);
+          g.root.position.set(x, y, z);
+          g.root.rotation.y = ry;
+          scene.add(g.root);
+          return { g, y, at: 0.45 + i * 0.16 };
+        });
+        const HAND = R.px(900, 660, 3.07);
+        const path = new THREE.CatmullRomCurve3([
+          R.px(1240, 960, 1.9), new THREE.Vector3(0.9, 1.3, -4.6), new THREE.Vector3(0.9, 1.3, -3.8),
+          new THREE.Vector3(-0.9, 1.15, -3.0), new THREE.Vector3(0.2, 1.4, -2.2), new THREE.Vector3(-0.2, 1.3, -4.6), HAND,
+        ]);
+        const trail = P.makeTrail(path, 0.012);
+        scene.add(trail.mesh);
+        const OFF = new THREE.Vector3(1.3, 1.4, 0.9), FOCUS = new THREE.Vector3(0, 0.8, -3.6);
+        const MATCH = 1.952;
+        function draw(t) {
+          const conv = E.easeInOut(E.seg(t, 0.35, 1.0));
+          K.sinkProps(room, conv);
+          room.mat.floor.color.copy(wood).lerp(slate, conv);
+          stands.forEach((s, i) => (s.position.y = -1.2 * (1 - E.easeOut(E.seg(t, 0.45 + i * 0.1, 1.0 + i * 0.1)))));
+          for (const { g, y, at } of gates) {
+            const k = E.backOut(E.seg(t, at, at + 0.4));
+            g.root.position.y = y - 3.2 * (1 - k);
+            g.root.visible = t > at - 0.01;
+          }
+          K.cameraArc(camera, t, 0.35, MATCH - 0.05, OFF, FOCUS);
+          const k = E.easeInOut(E.seg(t, 0.1, MATCH));
+          K.flyDrone(drone, path, k, t, 1.0);
+          if (t > MATCH) drone.root.rotation.set(0.1, 0, 0);
+          trail.reveal(Math.min(1, k + 0.001), Math.max(0, k - 0.35));
+          renderer.render(scene, camera);
+        }
+        E.registerScene("race3d", draw);
+      </script>
+    </template>
+  </body>
+</html>

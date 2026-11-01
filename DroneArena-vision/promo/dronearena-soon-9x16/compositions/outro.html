@@ -1,0 +1,214 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #outro-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #0d0820;
+          container-type: size;
+        }
+        #outro-floor-wrap {
+          position: absolute;
+          inset: 0;
+          perspective: 900px;
+          perspective-origin: 50% 30%;
+          -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 66%, #000 15%, transparent 72%);
+          mask-image: radial-gradient(ellipse 70% 60% at 50% 66%, #000 15%, transparent 72%);
+        }
+        #outro-floor {
+          position: absolute;
+          left: -100%;
+          top: 24%;
+          width: 300%;
+          height: 260%;
+          background-image: url("assets/grid.png");
+          background-size: 300px 300px;
+          transform-origin: 50% 0%;
+        }
+        #outro-halo {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at 50% 50%, rgba(56, 230, 245, 0.22) 0%, rgba(56, 230, 245, 0.05) 32%, transparent 56%);
+        }
+        .outro-lockup {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5cqw;
+          padding: 0 6cqw;
+        }
+        @container (aspect-ratio < 1) {
+          .outro-lockup {
+            flex-direction: column;
+            gap: 4.5cqh;
+          }
+          .outro-text {
+            align-items: center;
+            text-align: center;
+          }
+        }
+        .outro-stage {
+          perspective: 1600px;
+          flex: none;
+        }
+        #outro-ico {
+          position: relative;
+          width: min(40cqh, 56cqw);
+          height: min(40cqh, 56cqw);
+          transform-style: preserve-3d;
+        }
+        .outro-layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+        #outro-back {
+          border-radius: 50%;
+          overflow: hidden;
+          box-shadow: 0 0 0 3px rgba(56, 230, 245, 0.55), 0 40px 120px rgba(56, 230, 245, 0.28);
+        }
+        #outro-back img {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+        .outro-text {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1.4cqmin;
+        }
+        .outro-wm {
+          font-family: "Archivo Black", sans-serif;
+          font-size: min(10cqh, 9cqw);
+          line-height: 0.9;
+          letter-spacing: -0.04em;
+          color: #f2ecdd;
+          text-transform: uppercase;
+        }
+        .outro-line {
+          display: block;
+          overflow: hidden;
+          padding-bottom: 0.05em;
+        }
+        .outro-line > span {
+          display: block;
+        }
+        .outro-pro {
+          color: #38e6f5;
+          text-shadow: 0 0 0.3em rgba(56, 230, 245, 0.6);
+        }
+        .outro-tag {
+          font-family: "JetBrains Mono", monospace;
+          font-weight: 700;
+          font-size: min(2.3cqh, 2.9cqw);
+          letter-spacing: 0.16em;
+          color: #cffbff;
+          text-transform: uppercase;
+          max-width: 38em;
+        }
+        #outro-badge {
+          display: flex;
+          align-items: center;
+          gap: 0.55em;
+          margin-top: 1.6cqmin;
+          padding: 0.42em 1.1em 0.42em 0.8em;
+          font-size: min(4.2cqh, 5.4cqw);
+          background: #ff8a1f;
+          color: #0d0820;
+          border: 2px solid #a6a6a6;
+          border-radius: 0.36em;
+          box-shadow: 0 0 0 1px rgba(56, 230, 245, 0.25), 0 18px 60px rgba(56, 230, 245, 0.25);
+        }
+        #outro-badge svg {
+          width: 1.2em;
+          height: 1.2em;
+          display: block;
+          flex: none;
+        }
+        .outro-badge-txt {
+          display: flex;
+          flex-direction: column;
+          line-height: 1;
+          font-family: "Montserrat", sans-serif;
+        }
+        .outro-badge-small {
+          font-size: 0.34em;
+          font-weight: 400;
+          letter-spacing: 0.02em;
+        }
+        .outro-badge-big {
+          font-size: 0.78em;
+          font-weight: 700;
+          letter-spacing: -0.01em;
+          margin-top: 0.06em;
+        }
+        .outro-avp {
+          font-family: "JetBrains Mono", monospace;
+          font-weight: 400;
+          font-size: min(1.9cqh, 2.5cqw);
+          letter-spacing: 0.3em;
+          color: #8fb2bf;
+          margin-top: 0.6cqmin;
+        }
+      </style>
+
+      <div id="outro-root" data-composition-id="outro" data-width="1080" data-height="1920">
+        <div id="outro-floor-wrap"><div id="outro-floor"></div></div>
+        <div id="outro-halo"></div>
+        <div class="outro-lockup">
+          <div class="outro-stage">
+            <div id="outro-ico">
+              <div class="outro-layer" id="outro-back"><img src="assets/icon-Back.png" alt="" /></div>
+              <img class="outro-layer" id="outro-mid" src="assets/icon-Middle.png" alt="" />
+              <img class="outro-layer" id="outro-front" src="assets/icon-Front.png" alt="" />
+            </div>
+          </div>
+          <div class="outro-text">
+            <div class="outro-wm">
+              <span class="outro-line" data-layout-allow-overflow><span>Drone</span></span>
+              <span class="outro-line" data-layout-allow-overflow><span class="outro-pro">Arena</span></span>
+            </div>
+            <div class="outro-tag" id="outro-tag">Fly a drone through your room.</div>
+            <div id="outro-badge">
+              <div class="outro-badge-txt">
+                <span class="outro-badge-big">Coming Soon</span>
+              </div>
+            </div>
+            <div class="outro-avp" id="outro-avp">APPLE VISION PRO</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const ID = "outro";
+          const tl = gsap.timeline({ paused: true });
+          const ico = document.getElementById("outro-ico");
+          const S = ico ? ico.offsetWidth || 430 : 430;
+          tl.fromTo("#outro-floor", { rotationX: 66, y: 0, opacity: 0 }, { rotationX: 66, y: -520, opacity: 0.5, duration: 4.6, ease: "none" }, 0);
+          tl.fromTo("#outro-halo", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 1.2, ease: "expo.out" }, 0);
+          tl.fromTo("#outro-ico", { rotationY: 28, rotationX: 16, scale: 1.25 }, { rotationY: -12, rotationX: -4, scale: 1, duration: 4.6, ease: "power2.out" }, 0);
+          tl.fromTo("#outro-back", { z: -600, opacity: 0 }, { z: 0, opacity: 1, duration: 0.6, ease: "expo.out" }, 0.0);
+          tl.fromTo("#outro-mid", { z: S * 0.5, opacity: 0, scale: 1.6 }, { z: S * 0.12, opacity: 1, scale: 1, duration: 0.6, ease: "expo.out" }, 0.12);
+          tl.fromTo("#outro-front", { z: S * 0.24, yPercent: -120, opacity: 0 }, { z: S * 0.24, yPercent: 0, opacity: 1, duration: 0.5, ease: "expo.out" }, 0.3);
+          tl.fromTo(".outro-line > span", { yPercent: 110 }, { yPercent: 0, duration: 0.55, ease: "expo.out", stagger: 0.1 }, 0.45);
+          tl.fromTo("#outro-tag", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.85);
+          tl.fromTo("#outro-badge", { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "expo.out" }, 1.25);
+          tl.fromTo("#outro-avp", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.55);
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

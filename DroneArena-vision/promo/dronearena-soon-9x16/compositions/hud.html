@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #hud-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+          container-type: size;
+        }
+        #hud-scrim {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background: radial-gradient(ellipse 85% 80% at 50% 45%, transparent 55%, rgba(13, 8, 32, 0.55) 100%),
+            linear-gradient(to top, rgba(13, 8, 32, 0.7) 0%, rgba(13, 8, 32, 0) 34%);
+        }
+        .hud-br {
+          position: absolute;
+          width: 5cqmin;
+          height: 5cqmin;
+          border-color: #38e6f5;
+          border-style: solid;
+          border-width: 0;
+          opacity: 0;
+        }
+        #hud-br-tl { left: 3cqmin; top: 3cqmin; border-left-width: 4px; border-top-width: 4px; }
+        #hud-br-tr { right: 3cqmin; top: 3cqmin; border-right-width: 4px; border-top-width: 4px; }
+        #hud-br-bl { left: 3cqmin; bottom: 3cqmin; border-left-width: 4px; border-bottom-width: 4px; }
+        #hud-br-br { right: 3cqmin; bottom: 3cqmin; border-right-width: 4px; border-bottom-width: 4px; }
+        #hud-live {
+          position: absolute;
+          left: 5.5cqmin;
+          top: 5.5cqmin;
+          display: flex;
+          align-items: center;
+          gap: 0.7em;
+          font-family: "JetBrains Mono", monospace;
+          font-weight: 700;
+          font-size: calc(0.7cqw + 0.9cqh);
+          letter-spacing: 0.22em;
+          color: #cffbff;
+          opacity: 0;
+        }
+        #hud-dot {
+          width: 0.75em;
+          height: 0.75em;
+          border-radius: 50%;
+          background: #38e6f5;
+          box-shadow: 0 0 0.8em #38e6f5;
+        }
+        .hud-cap {
+          position: absolute;
+          left: 6cqw;
+          bottom: 9cqh;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1.2cqmin;
+          opacity: 0;
+        }
+        @container (aspect-ratio < 1) {
+          .hud-cap {
+            left: 0;
+            right: 0;
+            bottom: 14cqh;
+            align-items: center;
+            text-align: center;
+          }
+        }
+        @container (aspect-ratio < 1) {
+          .hud-cap.hud-top {
+            bottom: auto;
+            top: 15cqh;
+          }
+        }
+        .hud-title {
+          font-family: "Archivo Black", sans-serif;
+          font-size: calc(3.4cqw + 3cqh);
+          line-height: 0.92;
+          letter-spacing: -0.035em;
+          color: #f2ecdd;
+          text-transform: uppercase;
+          text-shadow: 0 0.06em 0.4em rgba(0, 0, 0, 0.55);
+          display: flex;
+          flex-wrap: wrap;
+          column-gap: 0.24em;
+          max-width: 88cqw;
+        }
+        @container (aspect-ratio < 1) {
+          .hud-title {
+            justify-content: center;
+          }
+        }
+        .hud-w {
+          display: block;
+          overflow: hidden;
+          padding-bottom: 0.06em;
+        }
+        .hud-w > span {
+          display: block;
+        }
+        .hud-glow {
+          color: #ff8a1f;
+        }
+        .hud-chip {
+          font-family: "JetBrains Mono", monospace;
+          font-weight: 700;
+          font-size: calc(0.95cqw + 0.95cqh);
+          letter-spacing: 0.18em;
+          color: #38e6f5;
+          padding: 0.5em 0.9em;
+          border: 2px solid rgba(56, 230, 245, 0.7);
+          background: rgba(13, 8, 32, 0.62);
+        }
+        #hud-compass {
+          position: absolute;
+          left: 50%;
+          top: 6cqh;
+          width: 46cqmin;
+          height: 6cqmin;
+          margin-left: -23cqmin;
+          overflow: hidden;
+          opacity: 0;
+          -webkit-mask-image: linear-gradient(to right, transparent, #000 25%, #000 75%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 25%, #000 75%, transparent);
+        }
+        #hud-strip {
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 100%;
+          display: flex;
+          align-items: flex-end;
+        }
+        .hud-tick {
+          position: relative;
+          flex: none;
+          width: 3cqmin;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 0.4cqmin;
+          font-family: "JetBrains Mono", monospace;
+          font-weight: 700;
+          font-size: 1.6cqmin;
+          color: #cffbff;
+        }
+        .hud-tick i {
+          display: block;
+          width: 2px;
+          height: 1.2cqmin;
+          background: #38e6f5;
+        }
+        .hud-tick.major i {
+          height: 2.2cqmin;
+        }
+        #hud-needle {
+          position: absolute;
+          left: 50%;
+          top: 0;
+          width: 3px;
+          height: 100%;
+          margin-left: -1.5px;
+          background: #ffffff;
+          box-shadow: 0 0 10px #38e6f5;
+        }
+      </style>
+
+      <div id="hud-root" data-composition-id="hud" data-width="1080" data-height="1920">
+        <div id="hud-scrim"></div>
+        <div class="hud-br" id="hud-br-tl"></div>
+        <div class="hud-br" id="hud-br-tr"></div>
+        <div class="hud-br" id="hud-br-bl"></div>
+        <div class="hud-br" id="hud-br-br"></div>
+        <div id="hud-live"><div id="hud-dot"></div><span>IN-GAME FOOTAGE</span></div>
+
+        <div class="hud-cap" id="cap-room">
+          <div class="hud-title"><span class="hud-w" data-layout-allow-overflow><span>Your</span></span><span class="hud-w" data-layout-allow-overflow><span class="hud-glow">room.</span></span></div>
+          <div class="hud-chip">APPLE VISION PRO</div>
+        </div>
+        <div class="hud-cap" id="cap-fly">
+          <div class="hud-title"><span class="hud-w" data-layout-allow-overflow><span>Your</span></span><span class="hud-w" data-layout-allow-overflow><span class="hud-glow">runway.</span></span></div>
+          <div class="hud-chip">HAND TRACKING FLIGHT</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const ID = "hud";
+          const strip = document.getElementById("hud-strip");
+          const names = { 0: "N", 45: "NE", 90: "E", 135: "SE", 180: "S", 225: "SW", 270: "W", 315: "NW" };
+          if (strip) {
+            for (let i = 0; i < 64; i++) {
+              const deg = (i * 15) % 360;
+              const d = document.createElement("div");
+              d.className = "hud-tick" + (deg % 45 === 0 ? " major" : "");
+              d.innerHTML = (names[deg] ? "<span>" + names[deg] + "</span>" : "<span>&nbsp;</span>") + "<i></i>";
+              strip.appendChild(d);
+            }
+          }
+          const tl = gsap.timeline({ paused: true });
+          const footage = [
+            [2.8, 11.9],
+          ];
+          footage.forEach(([a, b]) => {
+            tl.fromTo("#hud-scrim", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out", immediateRender: false }, a);
+            tl.to("#hud-scrim", { opacity: 0, duration: 0.1 }, b - 0.1);
+            tl.fromTo(".hud-br", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.35, ease: "expo.out", immediateRender: false }, a + 0.05);
+            tl.to(".hud-br", { opacity: 0, duration: 0.08 }, b - 0.08);
+            tl.fromTo("#hud-live", { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.3, ease: "expo.out", immediateRender: false }, a + 0.15);
+            tl.to("#hud-live", { opacity: 0, duration: 0.08 }, b - 0.08);
+          });
+          tl.fromTo("#hud-dot", { opacity: 1 }, { opacity: 0.25, duration: 0.28, ease: "none", yoyo: true, repeat: 31 }, 2.8);
+
+          function cap(sel, a, b) {
+            tl.set(sel, { opacity: 1 }, a);
+            tl.fromTo(sel + " .hud-w > span", { yPercent: 110 }, { yPercent: 0, duration: 0.4, ease: "expo.out", stagger: 0.07 }, a);
+            if (document.querySelector(sel + " .hud-chip")) tl.fromTo(sel + " .hud-chip", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.4, ease: "expo.out" }, a + 0.18);
+            tl.to(sel, { opacity: 0, duration: 0.1 }, b - 0.1);
+          }
+          cap("#cap-room", 3.3, 7.2);
+          cap("#cap-fly", 7.5, 11.9);
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

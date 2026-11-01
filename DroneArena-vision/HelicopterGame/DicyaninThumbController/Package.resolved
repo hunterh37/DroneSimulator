@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "dicyaninarkitsession",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hunterh37/DicyaninARKitSession.git",
+      "state" : {
+        "revision" : "f478a86e9924fce0f3b905e0adb33cd09eb9df14",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 2
+}

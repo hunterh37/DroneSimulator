@@ -1,0 +1,56 @@
+{
+ "bundleId": "org.dicyaninlabs.DroneArena",
+ "scheme": "DroneArena-iOS",
+ "platform": "ios",
+ "settleSeconds": 1.0,
+ "timeoutSeconds": 90,
+ "shots": [
+  {
+   "id": "00-menu",
+   "route": "menu/home",
+   "at": 1
+  },
+  {
+   "id": "00b-garage",
+   "route": "menu/home",
+   "at": 1,
+   "params": {
+    "stage": "garage"
+   }
+  },
+  {
+   "id": "00c-armory",
+   "route": "menu/home",
+   "at": 1,
+   "params": {
+    "stage": "armory"
+   }
+  },
+  {
+   "id": "01-practice",
+   "route": "fly/practice",
+   "at": 1,
+   "params": {
+    "load": "8"
+   }
+  },
+  {
+   "id": "02-timetrial",
+   "route": "fly/timetrial",
+   "at": 1,
+   "params": {
+    "load": "8"
+   }
+  },
+  {
+   "id": "08-sticks",
+   "route": "fly/practice",
+   "at": 1,
+   "params": {
+    "load": "8",
+    "left": "0.8,0.6",
+    "right": "-0.7,-0.5"
+   }
+  }
+ ]
+}

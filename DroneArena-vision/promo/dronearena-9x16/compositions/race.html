@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #race-root { position: absolute; inset: 0; overflow: hidden; background: #0d0820; container-type: size; }
+        #race-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+        #race-scrim { position: absolute; inset: 0; z-index: 1;
+          background: linear-gradient(to bottom, rgba(13, 8, 32, 0.72) 0%, rgba(13, 8, 32, 0) 32%); }
+        #race-copy { z-index: 2; position: absolute; left: 0; right: 0; top: 7cqh; display: flex;
+          flex-direction: column; align-items: center; gap: 1.6cqmin; padding: 0 6cqw; text-align: center; }
+        .race-kicker { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: calc(1.1cqw + 1cqh);
+          letter-spacing: 0.24em; color: #38e6f5; }
+        .race-title { font-family: "Archivo Black", sans-serif; font-size: calc(4.4cqw + 3.2cqh); line-height: 1;
+          letter-spacing: -0.035em; color: #f2ecdd; text-transform: uppercase; display: flex; flex-wrap: wrap;
+          justify-content: center; column-gap: 0.26em; max-width: 92cqw; }
+        .race-w { display: block; overflow: hidden; padding-bottom: 0.06em; }
+        .race-w > span { display: block; }
+        .race-glow { color: #ff8a1f; text-shadow: 0 0 0.35em rgba(255, 138, 31, 0.55); }
+      </style>
+
+      <div id="race-root" data-composition-id="race" data-width="1080" data-height="1920">
+        <canvas id="race-canvas" data-ee-canvas="race" data-layout-bleed></canvas>
+        <div id="race-scrim"></div>
+        <div id="race-copy">
+          <div class="race-kicker" id="race-kicker">RACE LEAGUE / SEASON 1</div>
+          <div class="race-title" data-layout-allow-occlusion>
+            <span class="race-w" data-layout-allow-overflow><span>Race</span></span>
+            <span class="race-w" data-layout-allow-overflow><span>the</span></span>
+            <span class="race-w" data-layout-allow-overflow><span class="race-glow">league.</span></span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const ID = "race";
+          const DUR = 2.23;
+          window.__eeTime = window.__eeTime || {};
+          window.__eeResolve = window.__eeResolve || {};
+          window.__hf = window.__hf || {};
+          window.__hf.buildReady = window.__hf.buildReady || {};
+          window.__hf.buildReady[ID] = new Promise((r) => (window.__eeResolve[ID] = r));
+          const st = { t: 0 };
+          const tl = gsap.timeline({ paused: true });
+          tl.to(st, { t: DUR, duration: DUR, ease: "none", onUpdate() {
+            window.__eeTime[ID] = st.t;
+            const f = window.__eeScenes && window.__eeScenes[ID];
+            if (f) f(st.t);
+          } }, 0);
+          tl.fromTo("#race-kicker", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.08);
+          tl.fromTo(".race-w > span", { yPercent: 110 }, { yPercent: 0, duration: 0.45, ease: "expo.out", stagger: 0.06 }, 0.15);
+          tl.to(".race-w > span", { yPercent: -110, duration: 0.28, ease: "power3.in", stagger: 0.035 }, 1.75);
+          tl.to("#race-kicker", { opacity: 0, duration: 0.22 }, 1.75);
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+      <script type="module">
+        import * as E from "./assets/scene3d.js";
+        import * as D from "./assets/drone3d.js";
+        const { THREE } = E;
+        const { canvas, root } = await E.findStage("race");
+        const { renderer, aspect } = E.makeRenderer(canvas, root);
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(D.VOID, 9, 26);
+        const camera = new THREE.PerspectiveCamera(E.fovFor(aspect, 40, 52), aspect, 0.05, 200);
+        D.addLights(scene);
+        // Gate slalom: chase camera rides behind the drone through a curving line of gates.
+        const floor = D.makeGridFloor(80, 80, D.CYAN, 0.4);
+        scene.add(floor);
+        const rand = E.rng(7);
+        const track = new THREE.CatmullRomCurve3(
+          Array.from({ length: 9 }, (_, i) => new THREE.Vector3(Math.sin(i * 0.9) * 2.6, 1.6 + Math.sin(i * 1.7) * 0.35, -i * 4.2)),
+        );
+        const gates = [];
+        for (let i = 1; i < 8; i++) {
+          const u = i / 8;
+          const g = D.makeGate(1.6, i % 3 === 0 ? D.HEAT : D.GATE);
+          track.getPointAt(u, g.root.position);
+          const tan = track.getTangentAt(u);
+          g.root.rotation.y = Math.atan2(tan.x, tan.z);
+          g.inner.children.forEach((m) => (m.userData.c = m.material.color.clone()));
+          scene.add(g.root);
+          gates.push({ g, u });
+        }
+        // Grandstands: rows of tiny colored fans on both sides.
+        const fanGeo = new THREE.BoxGeometry(0.16, 0.26, 0.16);
+        const fanCols = ["#ff3d5a", "#3d8bff", "#ffd23d", "#3ddc6b", "#ffffff"];
+        for (const side of [-1, 1]) {
+          for (let r = 0; r < 4; r++) {
+            for (let i = 0; i < 70; i++) {
+              const m = new THREE.Mesh(fanGeo, new THREE.MeshBasicMaterial({ color: fanCols[Math.floor(rand() * 5)] }));
+              m.position.set(side * (6.5 + r * 0.45), 0.15 + r * 0.32, 2 - i * 0.48);
+              scene.add(m);
+            }
+          }
+        }
+        const WHITE = new THREE.Color("#ffffff");
+        const drone = D.makeDrone();
+        scene.add(drone.root);
+        const camPos = new THREE.Vector3();
+        const look = new THREE.Vector3();
+        function draw(t) {
+          const u = 0.02 + E.easeIn(E.seg(t, 0, 0.6)) * 0.08 + E.seg(t, 0.6, 2.23) * 0.62;
+          track.getPointAt(u, drone.root.position);
+          const tan = track.getTangentAt(u);
+          const yaw = Math.atan2(-tan.x, -tan.z);
+          const bank = track.getTangentAt(Math.min(1, u + 0.03)).x - tan.x;
+          drone.root.rotation.set(-0.28, yaw, Math.max(-0.25, Math.min(0.25, -bank * 4)));
+          D.animateDrone(drone, t);
+          const back = Math.max(0, u - 0.075);
+          track.getPointAt(back, camPos);
+          camPos.y += 0.75;
+          camPos.x += Math.sin(t * 1.3) * 0.25;
+          camera.position.copy(camPos);
+          track.getPointAt(Math.min(1, u + 0.05), look);
+          camera.lookAt(look);
+          for (const { g, u: gu } of gates) {
+            const passed = u > gu;
+            g.inner.children.forEach((m) => m.material.color.copy(passed ? WHITE : m.userData.c));
+            g.inner.scale.setScalar(passed ? 1 + Math.min(0.25, (u - gu) * 8) : 1);
+          }
+          renderer.render(scene, camera);
+        }
+        E.registerScene("race", draw);
+      </script>
+    </template>
+  </body>
+</html>

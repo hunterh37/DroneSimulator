@@ -1,0 +1,788 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		076B7FDD7CE2062B7D46EFD0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CC07A16D1A0022BEEE6C872 /* Foundation.framework */; };
+		449B350565A1582B5C770B8F /* SceneSimulationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8B0D75A30F0F8E95A5810F /* SceneSimulationTests.swift */; };
+		55840E87AAC0FAA436AA23B0 /* ImmersiveTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 7F510170B666FD368C169327 /* ImmersiveTesting */; };
+		5A1100000000000000000001 /* ShaderGraphCoder in Frameworks */ = {isa = PBXBuildFile; productRef = 5A1100000000000000000002 /* ShaderGraphCoder */; };
+		81D00F0C2E8D4B5200BC0FBC /* DicyaninARKitSession in Frameworks */ = {isa = PBXBuildFile; productRef = 81D00F0B2E8D4B5200BC0FBC /* DicyaninARKitSession */; };
+		81D00F0F2E8D4BE500BC0FBC /* DicyaninThumbController in Frameworks */ = {isa = PBXBuildFile; productRef = 81D00F0E2E8D4BE500BC0FBC /* DicyaninThumbController */; };
+		81D0FF010000000000000003 /* DicyaninVirtualJoystick in Frameworks */ = {isa = PBXBuildFile; productRef = 81D0FF010000000000000002 /* DicyaninVirtualJoystick */; };
+		81D0FF010000000000000005 /* DicyaninVirtualJoystick in Frameworks */ = {isa = PBXBuildFile; productRef = 81D0FF010000000000000004 /* DicyaninVirtualJoystick */; };
+		967592F7AA563673C99D4E5F /* GameLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76F2647B8226ABBE16208CC /* GameLogicTests.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* RaceLeagueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* RaceLeagueTests.swift */; };
+		D3E0D1C2B3A4958677685940 /* DemoDirectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3E0D1C2B3A4958677685941 /* DemoDirectorTests.swift */; };
+		5D1000000000000000000003 /* DicyaninStageDirector in Frameworks */ = {isa = PBXBuildFile; productRef = 5D1000000000000000000002 /* DicyaninStageDirector */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B79FEA53911DF6223F9DEC54 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 81D00EE42E8D48B800BC0FBC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 81D00EEB2E8D48B800BC0FBC;
+			remoteInfo = DroneArena;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0CC07A16D1A0022BEEE6C872 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/XROS.platform/Developer/SDKs/XROS2.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		6675CDEC8885418B5E6CC0E4 /* DroneArenaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DroneArenaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B8B0D75A30F0F8E95A5810F /* SceneSimulationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SceneSimulationTests.swift; sourceTree = "<group>"; };
+		81D00EEC2E8D48B800BC0FBC /* DroneArena.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DroneArena.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		81D012182E8FD76E00BC0FBC /* DroneArena-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "DroneArena-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D4E5F60718293A4B5D /* RaceLeagueTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RaceLeagueTests.swift; sourceTree = "<group>"; };
+		D3E0D1C2B3A4958677685941 /* DemoDirectorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DemoDirectorTests.swift; sourceTree = "<group>"; };
+		E76F2647B8226ABBE16208CC /* GameLogicTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GameLogicTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		81D012852E8FD81200BC0FBC /* Exceptions for "HelicopterGame" folder in "DroneArena-iOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Controllers/GestureComponent/Components/GestureComponent.swift,
+				Controllers/GestureComponent/Extensions/EntityExtensions.swift,
+				Controllers/GestureComponent/Extensions/GestureExtensions.swift,
+				Controllers/GestureComponent/Extensions/RealityViewExtensions.swift,
+				Controllers/InputRouter.swift,
+				HelicopterGameApp.swift,
+				ImmersiveView.swift,
+				Info2.plist,
+				SceneReconstructionManager.swift,
+				ToggleImmersiveSpaceButton.swift,
+			);
+			target = 81D012172E8FD76E00BC0FBC /* DroneArena-iOS */;
+		};
+		81D012892E8FD96600BC0FBC /* Exceptions for "HelicopterGame" folder in "DroneArena" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Controllers/GestureComponent/Extensions/EntityExtensions_Mobile.swift,
+				Controllers/InputRouter_iOS.swift,
+				Info2.plist,
+				UI/MobileRealityView.swift,
+			);
+			target = 81D00EEB2E8D48B800BC0FBC /* DroneArena */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		81D00EEE2E8D48B800BC0FBC /* HelicopterGame */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				81D012892E8FD96600BC0FBC /* Exceptions for "HelicopterGame" folder in "DroneArena" target */,
+				81D012852E8FD81200BC0FBC /* Exceptions for "HelicopterGame" folder in "DroneArena-iOS" target */,
+			);
+			path = HelicopterGame;
+			sourceTree = "<group>";
+		};
+		81D012192E8FD76E00BC0FBC /* HelicopterGame-iOS */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "HelicopterGame-iOS";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		81D00EE92E8D48B800BC0FBC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				81D00F0C2E8D4B5200BC0FBC /* DicyaninARKitSession in Frameworks */,
+				81D00F0F2E8D4BE500BC0FBC /* DicyaninThumbController in Frameworks */,
+				81D0FF010000000000000003 /* DicyaninVirtualJoystick in Frameworks */,
+				5A1100000000000000000001 /* ShaderGraphCoder in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		81D012152E8FD76E00BC0FBC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				81D0FF010000000000000005 /* DicyaninVirtualJoystick in Frameworks */,
+				5D1000000000000000000003 /* DicyaninStageDirector in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D08AAC3755AC60B9D8B39D55 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				076B7FDD7CE2062B7D46EFD0 /* Foundation.framework in Frameworks */,
+				55840E87AAC0FAA436AA23B0 /* ImmersiveTesting in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4F99D80F76713592C0A80C1F /* DroneArenaTests */ = {
+			isa = PBXGroup;
+			children = (
+				E76F2647B8226ABBE16208CC /* GameLogicTests.swift */,
+				D3E0D1C2B3A4958677685941 /* DemoDirectorTests.swift */,
+				A1B2C3D4E5F60718293A4B5D /* RaceLeagueTests.swift */,
+				7B8B0D75A30F0F8E95A5810F /* SceneSimulationTests.swift */,
+			);
+			path = DroneArenaTests;
+			sourceTree = "<group>";
+		};
+		7E7D413FBF801EA07766E482 /* visionOS */ = {
+			isa = PBXGroup;
+			children = (
+				0CC07A16D1A0022BEEE6C872 /* Foundation.framework */,
+			);
+			name = visionOS;
+			sourceTree = "<group>";
+		};
+		81D00EE32E8D48B800BC0FBC = {
+			isa = PBXGroup;
+			children = (
+				81D00EEE2E8D48B800BC0FBC /* HelicopterGame */,
+				81D00EEF2E8D48B800BC0FBC /* Packages */,
+				81D012192E8FD76E00BC0FBC /* HelicopterGame-iOS */,
+				81D00EED2E8D48B800BC0FBC /* Products */,
+				B30F1B695A42A095AD610559 /* Frameworks */,
+				4F99D80F76713592C0A80C1F /* DroneArenaTests */,
+			);
+			sourceTree = "<group>";
+		};
+		81D00EED2E8D48B800BC0FBC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				81D00EEC2E8D48B800BC0FBC /* DroneArena.app */,
+				81D012182E8FD76E00BC0FBC /* DroneArena-iOS.app */,
+				6675CDEC8885418B5E6CC0E4 /* DroneArenaTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		81D00EEF2E8D48B800BC0FBC /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		B30F1B695A42A095AD610559 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7E7D413FBF801EA07766E482 /* visionOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		777BAE31A5A3BC3A3C9AB094 /* DroneArenaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3C68D6AA951FD43565DBB0FC /* Build configuration list for PBXNativeTarget "DroneArenaTests" */;
+			buildPhases = (
+				3BBA1BDC01961D8437231DA2 /* Sources */,
+				D08AAC3755AC60B9D8B39D55 /* Frameworks */,
+				645FB7FD542421CDD8508C87 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FEEB1561122ECFA40C535B7A /* PBXTargetDependency */,
+			);
+			name = DroneArenaTests;
+			packageProductDependencies = (
+				7F510170B666FD368C169327 /* ImmersiveTesting */,
+			);
+			productName = DroneArenaTests;
+			productReference = 6675CDEC8885418B5E6CC0E4 /* DroneArenaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		81D00EEB2E8D48B800BC0FBC /* DroneArena */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 81D00F052E8D48BA00BC0FBC /* Build configuration list for PBXNativeTarget "DroneArena" */;
+			buildPhases = (
+				81D00EE82E8D48B800BC0FBC /* Sources */,
+				81D00EE92E8D48B800BC0FBC /* Frameworks */,
+				81D00EEA2E8D48B800BC0FBC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				81D00EEE2E8D48B800BC0FBC /* HelicopterGame */,
+			);
+			name = DroneArena;
+			packageProductDependencies = (
+				81D00F0B2E8D4B5200BC0FBC /* DicyaninARKitSession */,
+				81D00F0E2E8D4BE500BC0FBC /* DicyaninThumbController */,
+				81D0FF010000000000000002 /* DicyaninVirtualJoystick */,
+				5A1100000000000000000002 /* ShaderGraphCoder */,
+			);
+			productName = HelicopterGame;
+			productReference = 81D00EEC2E8D48B800BC0FBC /* DroneArena.app */;
+			productType = "com.apple.product-type.application";
+		};
+		81D012172E8FD76E00BC0FBC /* DroneArena-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 81D012202E8FD77000BC0FBC /* Build configuration list for PBXNativeTarget "DroneArena-iOS" */;
+			buildPhases = (
+				81D012142E8FD76E00BC0FBC /* Sources */,
+				81D012152E8FD76E00BC0FBC /* Frameworks */,
+				81D012162E8FD76E00BC0FBC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				81D00EEE2E8D48B800BC0FBC /* HelicopterGame */,
+				81D012192E8FD76E00BC0FBC /* HelicopterGame-iOS */,
+			);
+			name = "DroneArena-iOS";
+			packageProductDependencies = (
+				81D0FF010000000000000004 /* DicyaninVirtualJoystick */,
+				5D1000000000000000000002 /* DicyaninStageDirector */,
+			);
+			productName = "HelicopterGame-iOS";
+			productReference = 81D012182E8FD76E00BC0FBC /* DroneArena-iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		81D00EE42E8D48B800BC0FBC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					81D00EEB2E8D48B800BC0FBC = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					81D012172E8FD76E00BC0FBC = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = 81D00EE72E8D48B800BC0FBC /* Build configuration list for PBXProject "DroneArena" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 81D00EE32E8D48B800BC0FBC;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				81D00F0A2E8D4B5200BC0FBC /* XCRemoteSwiftPackageReference "DicyaninARKitSession" */,
+				81D00F0D2E8D4BE500BC0FBC /* XCLocalSwiftPackageReference "DicyaninThumbController" */,
+				81D0FF010000000000000001 /* XCLocalSwiftPackageReference "DicyaninVirtualJoystick" */,
+				520791035171D0CBE443B613 /* XCLocalSwiftPackageReference "../../../ImmersiveTesting" */,
+				5A1100000000000000000003 /* XCRemoteSwiftPackageReference "ShaderGraphCoder" */,
+				5D1000000000000000000001 /* XCRemoteSwiftPackageReference "DicyaninStageDirector" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 81D00EED2E8D48B800BC0FBC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				81D00EEB2E8D48B800BC0FBC /* DroneArena */,
+				81D012172E8FD76E00BC0FBC /* DroneArena-iOS */,
+				777BAE31A5A3BC3A3C9AB094 /* DroneArenaTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		645FB7FD542421CDD8508C87 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		81D00EEA2E8D48B800BC0FBC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		81D012162E8FD76E00BC0FBC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3BBA1BDC01961D8437231DA2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				967592F7AA563673C99D4E5F /* GameLogicTests.swift in Sources */,
+				D3E0D1C2B3A4958677685940 /* DemoDirectorTests.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* RaceLeagueTests.swift in Sources */,
+				449B350565A1582B5C770B8F /* SceneSimulationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		81D00EE82E8D48B800BC0FBC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		81D012142E8FD76E00BC0FBC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FEEB1561122ECFA40C535B7A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DroneArena;
+			target = 81D00EEB2E8D48B800BC0FBC /* DroneArena */;
+			targetProxy = B79FEA53911DF6223F9DEC54 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		40E72385A170172B6336E997 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.dicyaninlabs.DroneArenaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = xros;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DroneArena.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DroneArena";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		80F4A1792074B037E0BE3CBB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.dicyaninlabs.DroneArenaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = xros;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DroneArena.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DroneArena";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		81D00F062E8D48BA00BC0FBC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 13;
+				DEVELOPMENT_TEAM = NWR2UZ4V67;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HelicopterGame/Info2.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DroneArena;
+				INFOPLIST_KEY_NSHandsTrackingUsageDescription = "We need access to hand tracking for gameplay input.";
+				INFOPLIST_KEY_NSWorldSensingUsageDescription = "We need access to world sensing for game world building.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.dicyaninlabs.DroneArena;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+			};
+			name = Debug;
+		};
+		81D00F072E8D48BA00BC0FBC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 13;
+				DEVELOPMENT_TEAM = NWR2UZ4V67;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HelicopterGame/Info2.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DroneArena;
+				INFOPLIST_KEY_NSHandsTrackingUsageDescription = "We need access to hand tracking for gameplay input.";
+				INFOPLIST_KEY_NSWorldSensingUsageDescription = "We need access to world sensing for game world building.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.dicyaninlabs.DroneArena;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+			};
+			name = Release;
+		};
+		81D00F082E8D48BA00BC0FBC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = NWR2UZ4V67;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = xros;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		81D00F092E8D48BA00BC0FBC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = NWR2UZ4V67;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = xros;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		81D012212E8FD77000BC0FBC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 10;
+				DEVELOPMENT_TEAM = NWR2UZ4V67;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SpatialDroneArena;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to the AR camera to display the game content.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.dicyaninlabs.DroneArena;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		81D012222E8FD77000BC0FBC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 10;
+				DEVELOPMENT_TEAM = NWR2UZ4V67;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SpatialDroneArena;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to the AR camera to display the game content.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.dicyaninlabs.DroneArena;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3C68D6AA951FD43565DBB0FC /* Build configuration list for PBXNativeTarget "DroneArenaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				40E72385A170172B6336E997 /* Release */,
+				80F4A1792074B037E0BE3CBB /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		81D00EE72E8D48B800BC0FBC /* Build configuration list for PBXProject "DroneArena" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				81D00F082E8D48BA00BC0FBC /* Debug */,
+				81D00F092E8D48BA00BC0FBC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		81D00F052E8D48BA00BC0FBC /* Build configuration list for PBXNativeTarget "DroneArena" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				81D00F062E8D48BA00BC0FBC /* Debug */,
+				81D00F072E8D48BA00BC0FBC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		81D012202E8FD77000BC0FBC /* Build configuration list for PBXNativeTarget "DroneArena-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				81D012212E8FD77000BC0FBC /* Debug */,
+				81D012222E8FD77000BC0FBC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		520791035171D0CBE443B613 /* XCLocalSwiftPackageReference "../../../ImmersiveTesting" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../ImmersiveTesting;
+		};
+		81D00F0D2E8D4BE500BC0FBC /* XCLocalSwiftPackageReference "DicyaninThumbController" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = DicyaninThumbController;
+		};
+		81D0FF010000000000000001 /* XCLocalSwiftPackageReference "DicyaninVirtualJoystick" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = DicyaninVirtualJoystick;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5A1100000000000000000003 /* XCRemoteSwiftPackageReference "ShaderGraphCoder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/praeclarum/ShaderGraphCoder.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		81D00F0A2E8D4B5200BC0FBC /* XCRemoteSwiftPackageReference "DicyaninARKitSession" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hunterh37/DicyaninARKitSession";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.1;
+			};
+		};
+		5D1000000000000000000001 /* XCRemoteSwiftPackageReference "DicyaninStageDirector" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hunterh37/DicyaninStageDirector.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5A1100000000000000000002 /* ShaderGraphCoder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5A1100000000000000000003 /* XCRemoteSwiftPackageReference "ShaderGraphCoder" */;
+			productName = ShaderGraphCoder;
+		};
+		7F510170B666FD368C169327 /* ImmersiveTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 520791035171D0CBE443B613 /* XCLocalSwiftPackageReference "../../../ImmersiveTesting" */;
+			productName = ImmersiveTesting;
+		};
+		81D00F0B2E8D4B5200BC0FBC /* DicyaninARKitSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 81D00F0A2E8D4B5200BC0FBC /* XCRemoteSwiftPackageReference "DicyaninARKitSession" */;
+			productName = DicyaninARKitSession;
+		};
+		81D00F0E2E8D4BE500BC0FBC /* DicyaninThumbController */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DicyaninThumbController;
+		};
+		81D0FF010000000000000002 /* DicyaninVirtualJoystick */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 81D0FF010000000000000001 /* XCLocalSwiftPackageReference "DicyaninVirtualJoystick" */;
+			productName = DicyaninVirtualJoystick;
+		};
+		81D0FF010000000000000004 /* DicyaninVirtualJoystick */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 81D0FF010000000000000001 /* XCLocalSwiftPackageReference "DicyaninVirtualJoystick" */;
+			productName = DicyaninVirtualJoystick;
+		};
+		5D1000000000000000000002 /* DicyaninStageDirector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D1000000000000000000001 /* XCRemoteSwiftPackageReference "DicyaninStageDirector" */;
+			productName = DicyaninStageDirector;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 81D00EE42E8D48B800BC0FBC /* Project object */;
+}

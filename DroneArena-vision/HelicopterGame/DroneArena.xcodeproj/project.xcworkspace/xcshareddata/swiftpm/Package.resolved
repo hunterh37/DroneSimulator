@@ -1,0 +1,33 @@
+{
+  "originHash" : "9fa8df05a77462537996761dd0103febdc50483b8191d8ed3871ed07923221e2",
+  "pins" : [
+    {
+      "identity" : "dicyaninarkitsession",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hunterh37/DicyaninARKitSession.git",
+      "state" : {
+        "revision" : "c8fa5c886cfe46768138f877224e17ef62835995",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "dicyaninstagedirector",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hunterh37/DicyaninStageDirector.git",
+      "state" : {
+        "revision" : "b414dc80e0f99dce51e68a11f42db51b2ac869cc",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "shadergraphcoder",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/praeclarum/ShaderGraphCoder.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "069cc5a5d4477ca15fb1bb5bd79c758634cd4c99"
+      }
+    }
+  ],
+  "version" : 3
+}
