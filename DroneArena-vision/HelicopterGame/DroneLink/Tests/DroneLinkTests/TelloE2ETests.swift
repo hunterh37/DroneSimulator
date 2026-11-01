@@ -17,8 +17,15 @@ final class MockTello: @unchecked Sendable {
     private var statePacket: String?
     private var scripted: [String] = []
 
+    // Sequential and below the ephemeral range: random ports collided with each other and with client sockets.
+    nonisolated(unsafe) private static var nextPort = UInt16(20000 + getpid() % 10000)
+    private static let portLock = NSLock()
+
     init() {
-        let base = UInt16.random(in: 30000...60000)
+        Self.portLock.lock()
+        let base = Self.nextPort
+        Self.nextPort += 2
+        Self.portLock.unlock()
         cmdPort = base
         statePort = base + 1
     }
@@ -59,8 +66,8 @@ final class MockTello: @unchecked Sendable {
     }
 
     /// Sends this state at 20 Hz until changed or stopped.
-    func pushState(h: Int, bat: Int = 80) {
-        lock.lock(); statePacket = "pitch:0;roll:0;yaw:0;vgx:0;vgy:0;vgz:0;templ:60;temph:62;tof:\(h);h:\(h);bat:\(bat);baro:0.0;time:0;agx:0.0;agy:0.0;agz:0.0;"
+    func pushState(h: Int, bat: Int = 80, vgx: Int = 0, vgy: Int = 0, yaw: Int = 0) {
+        lock.lock(); statePacket = "pitch:0;roll:0;yaw:\(yaw);vgx:\(vgx);vgy:\(vgy);vgz:0;templ:60;temph:62;tof:\(h);h:\(h);bat:\(bat);baro:0.0;time:0;agx:0.0;agy:0.0;agz:0.0;"
         lock.unlock()
         if timer == nil {
             let t = DispatchSource.makeTimerSource(queue: q)
@@ -101,6 +108,27 @@ struct TelloE2ETests {
         guard let rc = m.commands(prefix: "rc ").last else { return nil }
         let p = rc.split(separator: " ")
         return p.count == 5 ? Int(p[3]) : nil
+    }
+
+    private func lastB(_ m: MockTello) -> Int? {
+        guard let rc = m.commands(prefix: "rc ").last else { return nil }
+        let p = rc.split(separator: " ")
+        return p.count == 5 ? Int(p[2]) : nil
+    }
+
+    /// Flies about 1 m forward on telemetry, stops, and starts a return.
+    private func moveAndReturn(_ m: MockTello, _ link: TelloLink, h: Int) async {
+        m.pushState(h: h, vgx: 10)
+        #expect(await wait { link.reckoner.xCM >= 100 })
+        m.pushState(h: h)
+        link.returnHome()
+        #expect(link.returnStatus == .returning)
+    }
+
+    private func makeReturning(h: Int = 100) async throws -> (MockTello, TelloLink) {
+        let (m, link) = try await makeFlying(h: h)
+        await moveAndReturn(m, link, h: h)
+        return (m, link)
     }
 
     private func makeFlying(h: Int, bat: Int = 80) async throws -> (MockTello, TelloLink) {
@@ -177,6 +205,101 @@ struct TelloE2ETests {
         link.land()
         #expect(await wait { m.commands.contains("land") })
         #expect(link.state == .connected)
+        link.disconnect(); m.stop()
+    }
+
+    @Test func returnFliesHomeAndLands() async throws {
+        let (m, link) = try await makeReturning()
+        #expect(await wait { (lastB(m) ?? 0) < 0 })
+        m.pushState(h: 100, vgx: -10)
+        #expect(await wait { link.returnStatus == .arrived })
+        #expect(await wait { m.commands.contains("land") })
+        link.disconnect(); m.stop()
+    }
+
+    @Test func pilotTakesOver() async throws {
+        let (m, link) = try await makeReturning()
+        #expect(await fly(link, m) { link.returnStatus == .pilotTookOver })
+        #expect(link.state == .flying)
+        #expect(!m.commands.contains("land"))
+        link.disconnect(); m.stop()
+    }
+
+    @Test func telemetryLossLands() async throws {
+        let (m, link) = try await makeReturning()
+        m.stopState()
+        #expect(await wait { link.returnStatus == .positionLost })
+        #expect(await wait { m.commands.contains("land") })
+        link.disconnect(); m.stop()
+    }
+
+    @Test func killEndsReturn() async throws {
+        let (m, link) = try await makeReturning()
+        #expect(await wait { (lastB(m) ?? 0) < 0 })
+        link.emergency()
+        #expect(link.returnStatus == .idle)
+        #expect(await wait { m.commands.contains("emergency") })
+        let sent = m.commands(prefix: "rc ").count
+        try? await Task.sleep(for: .milliseconds(200))
+        #expect(m.commands(prefix: "rc ").count == sent)
+        link.disconnect(); m.stop()
+    }
+
+    @Test func landEndsReturn() async throws {
+        let (m, link) = try await makeReturning()
+        link.land()
+        #expect(link.returnStatus == .idle)
+        #expect(await wait { m.commands.contains("land") })
+        link.disconnect(); m.stop()
+    }
+
+    @Test func disarmEndsReturn() async throws {
+        let (m, link) = try await makeReturning()
+        #expect(await wait { (lastB(m) ?? 0) < 0 })
+        link.sticksEnabled = false
+        #expect(await wait { link.returnStatus == .idle })
+        #expect(await wait { m.commands(prefix: "rc ").last == "rc 0 0 0 0" })
+        #expect(!m.commands.contains("land"))
+        link.disconnect(); m.stop()
+    }
+
+    @Test func gapRefusesReturn() async throws {
+        let (m, link) = try await makeFlying(h: 100)
+        #expect(await wait { link.reckoner.isValid && link.stateAt != nil })
+        m.stopState()
+        try? await Task.sleep(for: .milliseconds(1200))
+        m.pushState(h: 100)
+        #expect(await wait { !link.reckoner.isValid })
+        #expect(!link.canReturnHome)
+        link.returnHome()
+        #expect(link.returnStatus == .idle)
+        link.disconnect(); m.stop()
+    }
+
+    @Test func returnObeysCeilingAndCap() async throws {
+        let (m, link) = try await makeReturning(h: 320)
+        link.speedLimit = 100
+        #expect(await wait { (lastC(m) ?? 0) < 0 && (lastB(m) ?? 0) < 0 })
+        let pitches = m.commands(prefix: "rc ").compactMap { Int($0.split(separator: " ")[2]) }
+        #expect(pitches.allSatisfy { abs($0) <= TelloLink.returnSpeedLimit })
+        link.disconnect(); m.stop()
+    }
+
+    @Test func returnTimesOut() async throws {
+        let (m, link) = try await makeReturning()
+        link.returnTimeout = 0.3
+        #expect(await wait { link.returnStatus == .timedOut })
+        #expect(await wait { m.commands.contains("land") })
+        link.disconnect(); m.stop()
+    }
+
+    @Test func newTakeoffResetsHome() async throws {
+        let (m, link) = try await makeReturning()
+        m.pushState(h: 100, vgx: -10)
+        #expect(await wait { link.returnStatus == .arrived })
+        link.takeoff()
+        #expect(link.reckoner.xCM == 0)
+        #expect(link.returnStatus == .idle)
         link.disconnect(); m.stop()
     }
 

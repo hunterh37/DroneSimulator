@@ -37,6 +37,15 @@ public final class TelloLink {
     public private(set) var lastReplyAt: Date?
     public static let minTakeoffBattery = 15
 
+    /// Outcome of the current or last return to home. Reset on takeoff.
+    public private(set) var returnStatus: ReturnStatus = .idle
+    /// Position relative to takeoff. Holds the flight-measured calibration.
+    public var reckoner = DeadReckoner()
+    public var returnTimeout: TimeInterval = 45
+    public static let returnSpeedLimit = 30
+    private static let takeoverStick: Float = 0.2
+    private var returnStartedAt = Date.distantPast
+
     /// Master switch. When false, no rc packets go out.
     public var sticksEnabled = false
     /// Per-axis output cap, 0...100. Lower = gentler.
@@ -70,6 +79,17 @@ public final class TelloLink {
 
     public var isFlying: Bool { state == .flying }
 
+    public var canReturnHome: Bool {
+        state == .flying && sticksEnabled && reckoner.isValid && returnStatus != .returning
+    }
+
+    /// Flies toward the estimated takeoff point at low speed, then lands. Any stick input cancels.
+    public func returnHome() {
+        guard canReturnHome else { return }
+        returnStartedAt = Date()
+        returnStatus = .returning
+    }
+
     public func connect() {
         disconnect()
         state = .connecting
@@ -90,6 +110,7 @@ public final class TelloLink {
         cmdConn?.cancel(); cmdConn = nil
         stateListener?.cancel(); stateListener = nil
         state = .disconnected
+        cancelReturn()
     }
 
     public func takeoff() {
@@ -100,6 +121,10 @@ public final class TelloLink {
         }
         takeoffBlockedReason = nil
         governor.reset()
+        reckoner.reset()
+        // Starts the gap clock now, so missing telemetry right after takeoff also loses home.
+        reckoner.add(vgx: 0, vgy: 0, yaw: 0, at: Date())
+        returnStatus = .idle
         sticks = .zero
         state = .flying
         Task { [weak self] in
@@ -111,6 +136,7 @@ public final class TelloLink {
     }
 
     public func land() {
+        cancelReturn()
         sticks = .zero
         send("rc 0 0 0 0")
         if state == .flying { state = .connected }
@@ -160,6 +186,7 @@ public final class TelloLink {
 
     /// Cuts motors immediately. The drone falls.
     public func emergency() {
+        cancelReturn()
         send("emergency")
         if state == .flying { state = .connected }
     }
@@ -198,8 +225,12 @@ public final class TelloLink {
 
     private func tick() {
         let now = Date()
-        if state != .flying { safety = .normal }
+        if state != .flying {
+            safety = .normal
+            cancelReturn()
+        }
         if state == .flying {
+            if returnStatus == .returning, stepReturn(now) { return }
             let age = stateAt.map { now.timeIntervalSince($0) }
             let g = governor.apply(sticksEnabled && now.timeIntervalSince(sticksAt) < staleAfter ? sticks : .zero,
                                    heightCM: heightCM, telemetryAge: age)
@@ -219,6 +250,46 @@ public final class TelloLink {
             send("battery?")   // Tello auto-lands after 15 s without commands
             keepAliveAt = now
         }
+    }
+
+    private func cancelReturn() {
+        if returnStatus == .returning { returnStatus = .idle }
+    }
+
+    /// One return tick. False hands the tick back to normal stick handling.
+    private func stepReturn(_ now: Date) -> Bool {
+        guard sticksEnabled else {
+            returnStatus = .idle
+            return false
+        }
+        let pilot = max(abs(sticks.yaw), abs(sticks.throttle), abs(sticks.roll), abs(sticks.pitch))
+        if now.timeIntervalSince(sticksAt) < staleAfter, pilot > Self.takeoverStick {
+            returnStatus = .pilotTookOver
+            return false
+        }
+        guard let at = stateAt, now.timeIntervalSince(at) <= governor.telemetryMaxAge, reckoner.isValid else {
+            finishReturn(.positionLost)
+            return true
+        }
+        guard now.timeIntervalSince(returnStartedAt) <= returnTimeout else {
+            finishReturn(.timedOut)
+            return true
+        }
+        guard let home = reckoner.homeSticks(yaw: stateFields["yaw"] ?? 0) else {
+            finishReturn(.arrived)
+            return true
+        }
+        let g = governor.apply(home, heightCM: heightCM, telemetryAge: now.timeIntervalSince(at))
+        safety = g.status
+        lastRC = g.sticks.rcCommand(limit: max(0, min(speedLimit, Self.returnSpeedLimit)), deadzone: deadzone)
+        send(lastRC)
+        keepAliveAt = now
+        return true
+    }
+
+    private func finishReturn(_ status: ReturnStatus) {
+        land()
+        returnStatus = status
     }
 
     private func send(_ text: String) {
@@ -261,6 +332,9 @@ public final class TelloLink {
         stateFields = f
         stateWindowCount += 1
         let now = Date()
+        if state == .flying, let vgx = f["vgx"], let vgy = f["vgy"], let yaw = f["yaw"] {
+            reckoner.add(vgx: vgx, vgy: vgy, yaw: yaw, at: now)
+        }
         let dt = now.timeIntervalSince(stateWindowStart)
         if dt >= 1 {
             stateRate = Double(stateWindowCount) / dt

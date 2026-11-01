@@ -96,7 +96,7 @@ struct TelloConnectorTests {
         let before = m.commands(prefix: "command").count
         m.stopState()
         #expect(await wait { c.reconnects >= 1 })
-        #expect(m.commands(prefix: "command").count > before)
+        #expect(await wait { m.commands(prefix: "command").count > before })
         #expect(await wait { c.state == .ready })
         c.cancel(); c.link.disconnect(); m.stop()
     }

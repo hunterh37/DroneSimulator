@@ -1,5 +1,9 @@
 import Foundation
 
+public enum ReturnStatus: Equatable, Sendable {
+    case idle, returning, arrived, pilotTookOver, positionLost, timedOut
+}
+
 /// How the Tello's `vgx`, `vgy` and `yaw` map onto forward, right and clockwise.
 /// The SDK docs do not state the frame or signs, so these are measured in flight.
 public struct VelocityCalibration: Equatable, Sendable {
