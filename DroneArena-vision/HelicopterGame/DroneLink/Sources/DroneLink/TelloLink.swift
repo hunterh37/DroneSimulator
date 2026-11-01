@@ -12,16 +12,16 @@ import Observation
 public final class TelloLink {
     public enum State: Equatable, Sendable { case disconnected, connecting, connected, flying, failed(String) }
 
-    public private(set) var state: State = .disconnected
+    public private(set) var state: State = .disconnected { didSet { if state != oldValue { FileLog.shared.write("state", "\(state)") } } }
     public private(set) var battery: Int?
     public private(set) var heightCM: Int?
     public private(set) var lastReply: String = ""
     public private(set) var lastRC: String = "rc 0 0 0 0"
     /// Time of the last telemetry packet.
     public private(set) var stateAt: Date?
-    public private(set) var safety: SafetyStatus = .normal
+    public private(set) var safety: SafetyStatus = .normal { didSet { if safety != oldValue { FileLog.shared.write("safety", "\(safety) h=\(heightCM ?? -1)") } } }
     /// Set when takeoff was refused (low battery).
-    public private(set) var takeoffBlockedReason: String?
+    public private(set) var takeoffBlockedReason: String? { didSet { if let r = takeoffBlockedReason { FileLog.shared.write("blocked", r) } } }
     public var governor = SafetyGovernor()
     /// Last 200 command and reply lines (rc and state packets are counted, not logged).
     public let log = PacketLog()
@@ -33,7 +33,7 @@ public final class TelloLink {
     public private(set) var cmdRTT: Int?
     public private(set) var replyCount = 0
     /// Set when an insisted command (takeoff, land, streamon) never got `ok`. Cleared on success.
-    public private(set) var commandFailure: String?
+    public private(set) var commandFailure: String? { didSet { if let f = commandFailure { FileLog.shared.write("fail", f) } } }
     public private(set) var lastReplyAt: Date?
     public static let minTakeoffBattery = 15
 

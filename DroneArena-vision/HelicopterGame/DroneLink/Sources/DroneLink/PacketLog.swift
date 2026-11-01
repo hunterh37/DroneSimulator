@@ -17,10 +17,14 @@ public final class PacketLog {
     public private(set) var entries: [Entry] = []
     @ObservationIgnored private var nextID = 0
 
+    /// Mirror of every entry to disk. Defaults to the shared session file.
+    @ObservationIgnored public var fileLog: FileLog? = FileLog.shared
+
     public init(capacity: Int = 200) { self.capacity = max(1, capacity) }
 
     public func append(_ direction: Direction, _ text: String, at time: Date = Date()) {
         entries.append(Entry(id: nextID, time: time, direction: direction, text: text))
+        fileLog?.write(direction.rawValue, text)
         nextID += 1
         if entries.count > capacity { entries.removeFirst(entries.count - capacity) }
     }
