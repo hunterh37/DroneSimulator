@@ -66,6 +66,12 @@ public struct SettingsView: View {
                         .help("Vibration feedback for interactions")
                 }
 
+                #if os(visionOS)
+                Section("Debug") {
+                    SceneMeshDebugToggle()
+                }
+                #endif
+
                 #if DEBUG
                 Section("Debug Controls") {
                     Button("Spawn Enemy Drone") {

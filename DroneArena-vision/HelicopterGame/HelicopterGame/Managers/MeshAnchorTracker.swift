@@ -88,7 +88,7 @@ class MeshAnchorTracker {
                 let meshResource = try await MeshResource.init(from: [desc])
                 entity.components[ModelComponent.self] = ModelComponent(
                     mesh: meshResource,
-                    materials: [SceneReconstructionManager.shared.wallMaterial])
+                    materials: [SceneMeshDebug.currentMaterial()])
                 
                 entity.components[SceneUnderstandingComponent.self] = .init(entityType: .meshChunk)
                 do {
