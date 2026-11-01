@@ -16,3 +16,6 @@ Files (DroneArena-vision/HelicopterGame/HelicopterGame/):
 - HelicopterGameApp.swift (real-drone window replaced by live-drone-feed; ImmersiveSpace "live-drone")
 - UI/DroneMainMenuView.swift ("Real drone" button replaced by "Live drone")
 User flow: Home > Live drone (closes sim space if open, opens live-drone space + feed window, closes MainWindow) > Connect (bridge.start + streamon) > Arm > Take off > fly with hand sticks > Exit (land, stop, close space and feed, reopen MainWindow).
+
+## Stage 3 done
+SafetyGovernor + TelloLink (statePort init arg, stateAt, safety, takeoffBlockedReason, governor) + banner in LiveDroneFeedView. Tests: 30 pass (SafetyGovernorTests, TelloE2ETests with MockTello on 127.0.0.1). App build succeeds. Not flown on hardware.

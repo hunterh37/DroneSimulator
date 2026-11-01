@@ -17,6 +17,13 @@ public final class TelloLink {
     public private(set) var heightCM: Int?
     public private(set) var lastReply: String = ""
     public private(set) var lastRC: String = "rc 0 0 0 0"
+    /// Time of the last telemetry packet.
+    public private(set) var stateAt: Date?
+    public private(set) var safety: SafetyStatus = .normal
+    /// Set when takeoff was refused (low battery).
+    public private(set) var takeoffBlockedReason: String?
+    public var governor = SafetyGovernor()
+    public static let minTakeoffBattery = 15
 
     /// Master switch. When false, no rc packets go out.
     public var sticksEnabled = false
@@ -29,6 +36,7 @@ public final class TelloLink {
     public let video = TelloVideoStream()
     public let host: String
     public let port: UInt16
+    public let statePort: UInt16
 
     private var cmdConn: NWConnection?
     private var stateListener: NWListener?
@@ -37,10 +45,13 @@ public final class TelloLink {
     private var timer: Timer?
     private var keepAliveAt = Date()
 
-    public init(host: String = "192.168.10.1", port: UInt16 = 8889) {
+    public init(host: String = "192.168.10.1", port: UInt16 = 8889, statePort: UInt16 = 8890) {
         self.host = host
         self.port = port
+        self.statePort = statePort
     }
+
+    private var isLoopback: Bool { host == "127.0.0.1" || host == "::1" || host == "localhost" }
 
     public var isFlying: Bool { state == .flying }
 
@@ -48,7 +59,7 @@ public final class TelloLink {
         disconnect()
         state = .connecting
         let params = NWParameters.udp
-        params.requiredInterfaceType = .wifi
+        if !isLoopback { params.requiredInterfaceType = .wifi }
         let c = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port)!, using: params)
         c.stateUpdateHandler = { [weak self] s in
             Task { @MainActor in self?.handle(s) }
@@ -68,6 +79,12 @@ public final class TelloLink {
 
     public func takeoff() {
         guard state == .connected else { return }
+        if let b = battery, b < Self.minTakeoffBattery {
+            takeoffBlockedReason = "battery \(b)% below \(Self.minTakeoffBattery)%"
+            return
+        }
+        takeoffBlockedReason = nil
+        governor.reset()
         sticks = .zero
         send("takeoff")
         state = .flying
@@ -128,16 +145,24 @@ public final class TelloLink {
 
     private func tick() {
         let now = Date()
-        if state == .flying, sticksEnabled {
-            let live = now.timeIntervalSince(sticksAt) < staleAfter ? sticks : .zero
-            lastRC = live.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone)
-            send(lastRC)
-            keepAliveAt = now
-        } else if state == .flying, now.timeIntervalSince(keepAliveAt) > 0.5 {
+        if state != .flying { safety = .normal }
+        if state == .flying {
+            let age = stateAt.map { now.timeIntervalSince($0) }
+            let g = governor.apply(sticksEnabled && now.timeIntervalSince(sticksAt) < staleAfter ? sticks : .zero,
+                                   heightCM: heightCM, telemetryAge: age)
+            safety = g.status
+            if sticksEnabled {
+                lastRC = g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone)
+                send(lastRC)
+                keepAliveAt = now
+                return
+            }
+        }
+        if state == .flying, !sticksEnabled, now.timeIntervalSince(keepAliveAt) > 0.5 {
             lastRC = "rc 0 0 0 0"
             send(lastRC)
             keepAliveAt = now
-        } else if now.timeIntervalSince(keepAliveAt) > 5 {
+        } else if state != .flying, now.timeIntervalSince(keepAliveAt) > 5 {
             send("battery?")   // Tello auto-lands after 15 s without commands
             keepAliveAt = now
         }
@@ -162,7 +187,7 @@ public final class TelloLink {
     }
 
     private func listenState() {
-        guard let l = try? NWListener(using: .udp, on: 8890) else { return }
+        guard let l = try? NWListener(using: .udp, on: NWEndpoint.Port(rawValue: statePort)!) else { return }
         l.newConnectionHandler = { [weak self] conn in
             conn.start(queue: .main)
             self?.readState(conn)
@@ -178,6 +203,7 @@ public final class TelloLink {
                 Task { @MainActor in
                     if let b = f["bat"] { self?.battery = b }
                     if let h = f["h"] { self?.heightCM = h }
+                    self?.stateAt = Date()
                 }
             }
             if error == nil { self?.readState(conn) }

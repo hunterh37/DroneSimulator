@@ -20,6 +20,7 @@ struct LiveDroneFeedView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                 hud.padding(14)
             }
+            .overlay(alignment: .top) { banner.padding(10) }
             controls
         }
         .padding(24)
@@ -37,6 +38,26 @@ struct LiveDroneFeedView: View {
         .font(.caption.monospaced())
         .padding(10)
         .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    @ViewBuilder private var banner: some View {
+        if let b = bannerContent {
+            Text(b.0)
+                .font(.headline)
+                .padding(.horizontal, 16).padding(.vertical, 8)
+                .background(b.1.opacity(0.85), in: Capsule())
+        }
+    }
+
+    private var bannerContent: (String, Color)? {
+        let ft = link.heightCM.map { String(format: "%.1f ft", Double($0) / 30.48) } ?? "-"
+        switch link.safety {
+        case .normal: return link.takeoffBlockedReason.map { ("Takeoff blocked: \($0)", .red) }
+        case .warning: return ("Near ceiling \(ft)", .orange)
+        case .ceiling: return ("Ceiling \(ft), climb stopped", .orange)
+        case .over: return ("Over ceiling \(ft), descending", .red)
+        case .noTelemetry: return ("No telemetry, climb disabled", .red)
+        }
     }
 
     private var controls: some View {

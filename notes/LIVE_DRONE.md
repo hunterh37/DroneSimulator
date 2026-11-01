@@ -9,6 +9,7 @@
 
 ## Safety
 Stale stick input over 0.4 s sends hover. Speed slider caps each rc axis (default 60/100). Closing the feed window lands.
+Altitude ceiling 10 ft (305 cm, Tello `h`): upward throttle tapers from 240 cm to 0 at 290 cm, is clamped to 0 above 290 cm, and is replaced by a -0.3 descent above 305 cm until height is below 290 cm. Telemetry older than 1 s while flying clamps upward throttle to 0. Takeoff is refused below 15 percent battery. The feed window shows a banner for each state. Logic: `SafetyGovernor`, applied in `TelloLink` each rc tick.
 Invert pitch toggle exists because the forward sign is not yet verified on hardware.
 
 ## Code
