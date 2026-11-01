@@ -32,6 +32,10 @@ public final class TelloVideoStream {
     @ObservationIgnored private var sps: [UInt8]?
     @ObservationIgnored private var pps: [UInt8]?
     @ObservationIgnored private var format: CMVideoFormatDescription?
+    /// Slices of the access unit being assembled. Tello can split one frame into several slices.
+    @ObservationIgnored private var pendingSlices: [[UInt8]] = []
+    /// Test hook: called with every sample buffer before it is enqueued.
+    @ObservationIgnored public var onSample: ((CMSampleBuffer) -> Void)?
     @ObservationIgnored private var windowStart = Date()
     @ObservationIgnored private var windowFrames = 0
     @ObservationIgnored private var byteWindowStart = Date()
@@ -56,6 +60,7 @@ public final class TelloVideoStream {
         conns.removeAll()
         parser = H264NALParser()
         sps = nil; pps = nil; format = nil
+        pendingSlices.removeAll()
         displayLayer.flushAndRemoveImage()
         fps = 0
         bytesPerSecond = 0
@@ -99,18 +104,38 @@ public final class TelloVideoStream {
         nalCounts[Int(nal.type), default: 0] += 1
         switch nal.type {
         case 7:
+            flushFrame()
             if sps != nal.bytes { sps = nal.bytes; format = nil }
         case 8:
+            flushFrame()
             if pps != nal.bytes { pps = nal.bytes; format = nil }
         case 1, 5:
-            if format == nil { format = makeFormat() }
-            guard let format, let sb = makeSample(nal.bytes, format: format) else { return }
-            if displayLayer.sampleBufferRenderer.status == .failed { displayLayer.sampleBufferRenderer.flush() }
-            displayLayer.sampleBufferRenderer.enqueue(sb)
-            countFrame()
+            // first_mb_in_slice == 0 (ue(v) "1" bit) starts a new picture.
+            if nal.bytes.count > 1, nal.bytes[1] & 0x80 != 0 { flushFrame() }
+            pendingSlices.append(nal.bytes)
+        case 9:
+            flushFrame()
         default:
             break
         }
+    }
+
+    /// Sends the assembled access unit now instead of waiting for the next one.
+    public func flushPending() {
+        for nal in parser.flush() { handle(nal) }
+        flushFrame()
+    }
+
+    private func flushFrame() {
+        guard !pendingSlices.isEmpty else { return }
+        let slices = pendingSlices
+        pendingSlices.removeAll()
+        if format == nil { format = makeFormat() }
+        guard let format, let sb = makeSample(slices, format: format) else { return }
+        onSample?(sb)
+        if displayLayer.sampleBufferRenderer.status == .failed { displayLayer.sampleBufferRenderer.flush() }
+        displayLayer.sampleBufferRenderer.enqueue(sb)
+        countFrame()
     }
 
     private func makeFormat() -> CMVideoFormatDescription? {
@@ -129,11 +154,12 @@ public final class TelloVideoStream {
         return status == noErr ? fd : nil
     }
 
-    private func makeSample(_ nal: [UInt8], format: CMVideoFormatDescription) -> CMSampleBuffer? {
-        var avcc = [UInt8](repeating: 0, count: 4)
-        let len = UInt32(nal.count).bigEndian
-        withUnsafeBytes(of: len) { avcc.replaceSubrange(0..<4, with: $0) }
-        avcc.append(contentsOf: nal)
+    private func makeSample(_ slices: [[UInt8]], format: CMVideoFormatDescription) -> CMSampleBuffer? {
+        var avcc: [UInt8] = []
+        for nal in slices {
+            withUnsafeBytes(of: UInt32(nal.count).bigEndian) { avcc.append(contentsOf: $0) }
+            avcc.append(contentsOf: nal)
+        }
 
         var block: CMBlockBuffer?
         guard CMBlockBufferCreateWithMemoryBlock(
