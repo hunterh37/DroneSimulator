@@ -1258,7 +1258,7 @@ struct GlossyShineModifier: ViewModifier {
                     startPoint: .top,
                     endPoint: .center
                 )
-                .blendMode(.softLight)
+                .blendMode(SwiftUI.BlendMode.softLight)
             )
     }
 }
