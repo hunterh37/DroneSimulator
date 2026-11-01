@@ -26,6 +26,7 @@ public final class TelloLink {
     public var sendRate: Double = 20
     public var staleAfter: TimeInterval = 0.4
 
+    public let video = TelloVideoStream()
     public let host: String
     public let port: UInt16
 
@@ -77,6 +78,17 @@ public final class TelloLink {
         send("rc 0 0 0 0")
         send("land")
         if state == .flying { state = .connected }
+    }
+
+    /// Opens the UDP 11111 listener and tells the drone to stream.
+    public func startVideo() {
+        video.start()
+        send("streamon")
+    }
+
+    public func stopVideo() {
+        send("streamoff")
+        video.stop()
     }
 
     /// Cuts motors immediately. The drone falls.
