@@ -51,8 +51,11 @@ public final class TelloLink {
     /// Master switch. When false, no rc packets go out.
     public var sticksEnabled = false
     /// Per-axis output cap, 0...100. Lower = gentler.
-    public var speedLimit = 60
-    public var deadzone: Float = 0.08
+    public var speedLimit = 80
+    /// Input is already deadzoned by the stick source; this only drops float noise.
+    public var deadzone: Float = 0.02
+    /// First rc step past the deadzone, as a fraction of speedLimit (0.2 of 80 = rc 16).
+    public var minOutput: Float = 0.2
     public var sendRate: Double = 20
     public var staleAfter: TimeInterval = 0.4
 
@@ -277,7 +280,7 @@ public final class TelloLink {
                                    heightCM: heightCM, telemetryAge: age)
             safety = g.status
             if sticksEnabled {
-                lastRC = g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone)
+                lastRC = g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone, minOutput: minOutput)
                 send(lastRC)
                 keepAliveAt = now
                 return
@@ -331,7 +334,7 @@ public final class TelloLink {
         slow.pitch *= scale
         let g = governor.apply(slow, heightCM: heightCM, telemetryAge: now.timeIntervalSince(at))
         safety = g.status
-        lastRC = g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone)
+        lastRC = g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone, minOutput: 0)
         send(lastRC)
         keepAliveAt = now
         return true

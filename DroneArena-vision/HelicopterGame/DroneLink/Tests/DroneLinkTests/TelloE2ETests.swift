@@ -375,7 +375,9 @@ struct TelloE2ETests {
     @Test func returnKeepsCeilingDescentAuthority() async throws {
         let (m, link) = try await makeReturning(h: 320)
         link.speedLimit = 100
-        #expect(await wait { lastC(m) == -24 })   // same as -0.3 throttle in normal flight
+        let descent = DroneSticks(yaw: 0, throttle: -0.3, roll: 0, pitch: 0)
+            .rcValues(limit: 100, deadzone: link.deadzone).2
+        #expect(await wait { lastC(m) == descent })   // same as -0.3 throttle in normal flight
         let rolls = m.commands(prefix: "rc ").compactMap { Int($0.split(separator: " ")[1]) }
         #expect(rolls.allSatisfy { abs($0) <= TelloLink.returnSpeedLimit })
         link.disconnect(); m.stop()

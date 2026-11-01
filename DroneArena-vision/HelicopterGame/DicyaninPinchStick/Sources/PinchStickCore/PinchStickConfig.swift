@@ -9,8 +9,8 @@ public struct PinchStickConfig: Sendable, Equatable {
     public var engageDistance: Float = 0.015
     public var releaseDistance: Float = 0.025
     public var deadzone: Float = 0.012
-    public var fullThrow: Float = 0.06
-    public var expo: Float = 0.35
+    public var fullThrow: Float = 0.045
+    public var expo: Float = 0.15
     public var minCutoff: Float = 1.0
     public var beta: Float = 0.02
     public var derivativeCutoff: Float = 1.0

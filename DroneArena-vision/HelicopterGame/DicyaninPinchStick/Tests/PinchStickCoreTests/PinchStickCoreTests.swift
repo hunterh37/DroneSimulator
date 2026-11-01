@@ -73,8 +73,9 @@ private func settle(_ m: inout PinchStickMachine, at p: SIMD3<Float>, from t0: D
 
 @Test func expoCurve() {
     let c = PinchStickConfig()
-    let mid = StickMapping.map(SIMD2(0.036, 0), config: c).x  // m = 0.5
-    let expected: Float = 0.65 * 0.5 + 0.35 * 0.125
+    let r = c.deadzone + 0.5 * (c.fullThrow - c.deadzone)  // m = 0.5
+    let mid = StickMapping.map(SIMD2(r, 0), config: c).x
+    let expected: Float = (1 - c.expo) * 0.5 + c.expo * 0.125
     #expect(abs(mid - expected) < 1e-5)
     #expect(mid < 0.5)
 }
