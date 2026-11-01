@@ -9,8 +9,9 @@ struct LiveControls: View {
     private var link: TelloLink { bridge.link }
 
     var body: some View {
-        VStack(spacing: 16) {
+        HStack(spacing: 20) {
             LiveConnectButton(bridge: bridge)
+            Rectangle().fill(LiveTheme.hairline).frame(width: 1, height: 36)
             HStack(spacing: 8) {
                 Button("Arm") { link.sticksEnabled.toggle() }
                     .buttonStyle(LiveChipStyle(filled: link.sticksEnabled))
@@ -27,6 +28,7 @@ struct LiveControls: View {
                 Button("Land") { link.land() }.buttonStyle(LiveChipStyle())
                 Button("Kill") { link.emergency() }.buttonStyle(LiveChipStyle(danger: true))
             }
+            Rectangle().fill(LiveTheme.hairline).frame(width: 1, height: 36)
             HStack(spacing: 8) {
                 LiveLabel("Speed", size: 12, color: LiveTheme.textFaint)
                 speedRow

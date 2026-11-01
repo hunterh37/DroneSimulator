@@ -43,11 +43,38 @@ public final class TelloVideoStream {
 
     public init(port: UInt16 = 11111) { self.port = port }
 
+    /// Idempotent: a live listener is kept. Rebinding 11111 while the old socket is
+    /// still closing fails silently, which showed as a permanent NO SIGNAL.
     public func start() {
+        if listener != nil, isListening { return }
         stop()
-        guard let p = NWEndpoint.Port(rawValue: port), let l = try? NWListener(using: .udp, on: p) else { return }
+        guard let p = NWEndpoint.Port(rawValue: port) else { return }
+        let params = NWParameters.udp
+        params.allowLocalEndpointReuse = true
+        guard let l = try? NWListener(using: params, on: p) else {
+            FileLog.shared.write("video", "listener create failed on \(port)")
+            return
+        }
         l.newConnectionHandler = { [weak self] conn in
             Task { @MainActor in self?.accept(conn) }
+        }
+        l.stateUpdateHandler = { [weak self] st in
+            Task { @MainActor in
+                guard let self, self.listener === l else { return }
+                switch st {
+                case .ready:
+                    FileLog.shared.write("video", "listening udp \(self.port)")
+                case .failed(let e):
+                    FileLog.shared.write("video", "listener failed \(e); retry")
+                    self.listener = nil
+                    self.isListening = false
+                    l.cancel()
+                    try? await Task.sleep(for: .milliseconds(500))
+                    self.start()
+                default:
+                    break
+                }
+            }
         }
         l.start(queue: .main)
         listener = l
@@ -70,6 +97,7 @@ public final class TelloVideoStream {
     // MARK: internals
 
     private func accept(_ conn: NWConnection) {
+        FileLog.shared.write("video", "stream from \(conn.endpoint)")
         conns.append(conn)
         conn.start(queue: .main)
         read(conn)
@@ -131,7 +159,15 @@ public final class TelloVideoStream {
         let slices = pendingSlices
         pendingSlices.removeAll()
         if format == nil { format = makeFormat() }
-        guard let format, let sb = makeSample(slices, format: format) else { return }
+        guard let format else {
+            if framesDecoded == 0 { FileLog.shared.write("video", "no SPS/PPS yet, frame dropped") }
+            return
+        }
+        guard let sb = makeSample(slices, format: format) else {
+            FileLog.shared.write("video", "sample build failed")
+            return
+        }
+        if framesDecoded == 0 { FileLog.shared.write("video", "first frame") }
         onSample?(sb)
         if displayLayer.sampleBufferRenderer.status == .failed { displayLayer.sampleBufferRenderer.flush() }
         displayLayer.sampleBufferRenderer.enqueue(sb)

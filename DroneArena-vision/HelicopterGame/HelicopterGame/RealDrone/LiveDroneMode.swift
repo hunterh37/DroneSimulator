@@ -54,10 +54,17 @@ struct LiveDroneImmersiveView: View {
 
     var body: some View {
         RealityView { content in
+            LiveWorldSystem.registerSystem()
             let root = Entity()
             content.add(root)
+            content.add(LiveWorldBuilder.make())
             liveRoot = root
         }
+        .gesture(SpatialTapGesture().targetedToAnyEntity().onEnded { v in
+            guard v.entity.name == "floor" else { return }
+            let p = v.convert(v.location3D, from: .local, to: .scene)
+            AutonomyController.shared.setTarget(LiveWorldComponent.fromScene(p))
+        })
         .task {
             try? await DualThumbController.shared.start()
             if let root = liveRoot { await PinchStickRouter.shared.start(rootEntity: root) }

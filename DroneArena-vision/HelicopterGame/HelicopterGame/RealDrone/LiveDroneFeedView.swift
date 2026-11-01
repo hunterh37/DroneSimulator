@@ -2,70 +2,83 @@
 import DroneLink
 import SwiftUI
 
-/// Camera feed window: video edge to edge with HUD and flight controls overlaid.
+/// Camera feed window. Header with mode switch, 1440x1080 video between two control
+/// columns (sticks in Manual, target and obstacle panels in Auto), flight bar below.
 struct LiveDroneFeedView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @State private var bridge = RealDroneBridge.shared
+    @State private var auto = AutonomyController.shared
     private var link: TelloLink { bridge.link }
+
+    static let videoSize = CGSize(width: 1440, height: 1080)
+    static let sideWidth: CGFloat = 240
 
     var body: some View {
         VStack(spacing: 0) {
-            videoPane
-            deck
+            header
+            line
+            HStack(spacing: 0) {
+                column { if auto.mode == .joystick { LiveTouchStick(side: .left) } else { LiveAutoPanel(auto: auto) } }
+                videoPane
+                column { if auto.mode == .joystick { LiveTouchStick(side: .right) } else { LiveObstaclePanel(auto: auto) } }
+            }
+            line
+            footer
         }
-        .frame(width: 1280)
+        .frame(width: Self.videoSize.width + Self.sideWidth * 2)
         .background(LiveTheme.bg)
         .preferredColorScheme(.dark)
-        .onDisappear { bridge.stop() }
+        .onAppear { auto.start(link: link) }
+        .onDisappear { bridge.stop(); auto.stop() }
+    }
+
+    private var line: some View { Rectangle().fill(LiveTheme.hairline).frame(height: 1) }
+
+    private var header: some View {
+        ZStack {
+            LiveTopBar(link: link, onExit: exit)
+            LiveModeSwitch(auto: auto)
+        }
+        .frame(height: 76)
+    }
+
+    private func column<C: View>(@ViewBuilder _ c: () -> C) -> some View {
+        c().frame(width: Self.sideWidth, height: Self.videoSize.height).background(Color.black)
     }
 
     private var videoPane: some View {
         ZStack {
             LiveTheme.bg
             TelloVideoView(stream: link.video)
-            if link.video.fps <= 0 { noSignal }
+            if link.video.fps <= 0, !auto.demo { noSignal }
+            ObstacleOverlay(auto: auto)
         }
-        .aspectRatio(4.0 / 3.0, contentMode: .fit)
+        .frame(width: Self.videoSize.width, height: Self.videoSize.height)
         .clipped()
-        .overlay(alignment: .top) {
-            VStack(spacing: 0) {
-                LiveTopBar(link: link, onExit: exit)
-                LiveSafetyStrip(link: link)
-            }
-        }
+        .overlay(alignment: .top) { LiveSafetyStrip(link: link) }
         .overlay(alignment: .leading) { LiveAltitudeTape(heightCM: link.heightCM).padding(.leading, 24) }
         .overlay(alignment: .trailing) {
-            if bridge.showDebug { LiveDebugView(bridge: bridge).padding(.top, 56).padding(.bottom, 24) }
+            if bridge.showDebug { LiveDebugView(bridge: bridge).padding(.vertical, 24) }
         }
     }
 
-    private var deck: some View {
-        VStack(spacing: 0) {
-            Rectangle().fill(LiveTheme.hairline).frame(height: 1)
-            HStack(alignment: .center, spacing: 16) {
-                LiveTouchStick(side: .left)
-                Rectangle().fill(LiveTheme.hairline).frame(width: 1)
-                VStack(spacing: 8) {
-                    LiveControls(bridge: bridge)
-                    LiveLabel(link.lastRC, size: 11, color: LiveTheme.textFaint)
-                }
-                .frame(maxWidth: .infinity)
-                Rectangle().fill(LiveTheme.hairline).frame(width: 1)
-                LiveTouchStick(side: .right)
-            }
-            .padding(24)
+    private var footer: some View {
+        HStack(spacing: 20) {
+            LiveControls(bridge: bridge)
+            Spacer()
+            LiveScanToggles(auto: auto)
         }
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24).padding(.vertical, 16)
         .background(Color.black)
     }
 
     private var noSignal: some View {
-        VStack(spacing: 10) {
-            LiveLabel("No signal", size: 16, color: LiveTheme.textFaint)
-            Rectangle().fill(LiveTheme.text).frame(width: 120, height: 1)
+        VStack(spacing: 14) {
+            LiveLabel("No signal", size: 20, color: LiveTheme.textDim)
+            LiveLabel("Connect a Tello or turn on Demo", size: 12, color: LiveTheme.textFaint)
         }
     }
 

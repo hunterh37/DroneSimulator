@@ -213,13 +213,22 @@ public final class TelloLink {
         return false
     }
 
-    /// Opens the UDP 11111 listener and tells the drone to stream.
-    /// The listener starts only after `streamon` returns `ok`.
+    /// Opens the UDP 11111 listener first (the Tello streams the moment it accepts
+    /// `streamon`, and a reply can be lost), then sends `streamon` until frames arrive.
     public func startVideo() {
+        video.start()
         Task { [weak self] in
             guard let self else { return }
-            if await self.insist("streamon") { self.video.start() }
-            else { self.commandFailure = "VIDEO NOT ACKNOWLEDGED" }
+            let acked = await self.insist("streamon")
+            for _ in 0..<6 where self.video.framesDecoded == 0 && self.state != .disconnected {
+                try? await Task.sleep(for: .seconds(2))
+                if self.video.framesDecoded > 0 { break }
+                FileLog.shared.write("video", "no frames, resend streamon (bytes \(self.video.totalBytes))")
+                await self.insist("streamon", attempts: 1, gap: 0.5)
+            }
+            if self.video.framesDecoded == 0 {
+                self.commandFailure = acked ? "VIDEO: NO FRAMES" : "VIDEO NOT ACKNOWLEDGED"
+            }
         }
     }
 
@@ -239,8 +248,13 @@ public final class TelloLink {
     public func sendCommand(_ text: String) { send(text) }
 
     public func update(_ s: DroneSticks) {
+        let changed = s != sticks
         sticks = s
-        sticksAt = Date()
+        let now = Date()
+        sticksAt = now
+        // Send stick changes right away (capped at 40 Hz) instead of waiting for the next timer tick.
+        if changed, state == .flying, sticksEnabled, returnStatus != .returning,
+           now.timeIntervalSince(keepAliveAt) >= 1.0 / 40 { tick() }
     }
 
     // MARK: internals

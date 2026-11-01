@@ -37,9 +37,11 @@ final class RealDroneBridge {
     private func start() {
         guard timer == nil else { return }
         isActive = true
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { _ in
-            Task { @MainActor in RealDroneBridge.shared.sample() }
+        let t = Timer(timeInterval: 1.0 / 60.0, repeats: true) { _ in
+            MainActor.assumeIsolated { RealDroneBridge.shared.sample() }
         }
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
     }
 
     func stop() {
@@ -54,18 +56,18 @@ final class RealDroneBridge {
 
     private func sample() {
         guard isActive else { return }
+        let s = AutonomyController.shared.tick(joystick: readJoystick(), link: link)
+        if s != sticks { sticks = s }
+        link.update(s)
+    }
+
+    /// Mode 2, matches MobileVirtualJoystickComponent: left = throttle (y) + yaw (x),
+    /// right = pitch (y) + roll (x).
+    func readJoystick() -> DroneSticks {
         let c = DualThumbController.shared
         let l = c.leftIsActive ? c.leftDirection * c.leftMagnitude : .zero
         let r = c.rightIsActive ? c.rightDirection * c.rightMagnitude : .zero
-        // Mode 2, matches MobileVirtualJoystickComponent: left = throttle (y) + yaw (x),
-        // right = pitch (y) + roll (x).
-        sticks = DroneSticks(
-            yaw: l.x,
-            throttle: l.y,
-            roll: r.x,
-            pitch: invertPitch ? -r.y : r.y
-        )
-        link.update(sticks)
+        return DroneSticks(yaw: l.x, throttle: l.y, roll: r.x, pitch: invertPitch ? -r.y : r.y)
     }
 }
 #endif

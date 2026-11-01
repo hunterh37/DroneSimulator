@@ -41,3 +41,8 @@ Package linked (product DicyaninPinchStick). Input/PinchStickRouter.swift gates 
 
 ## Layout pass done
 Live feed: sticks 134 pt (+40 percent) with throw/deadzone rings, ticks, axis labels, value bars. Window 1280 wide: 4:3 video, black control deck below (stick | controls | stick), contentSize resizing. PinchStick ring already read config.fullThrow (PinchStickSystem.throwRadius unused). Device build succeeds. Not run on device.
+
+## Obstacle avoidance + autonomous mode
+DroneLink: ObstacleModels (TelloCamera intrinsics), ObstacleTracker (TTC, range, threat), PoleDetector (luma vertical runs), PathPlanner (DronePose, ObstacleMemory, detour planner, PathFollower), DemoWorld (simulated drone and poles). Tests: 75 pass.
+App RealDrone/Obstacles: ObstacleScanner (VT decode + PoleDetector + Vision saliency at 10 Hz), AutonomyController (mode joystick/autonomous, brake, demo, replan on new obstacle), ObstacleOverlay (red target boxes, corridor, banner), LiveModeBar/LiveAutoPanel, LiveWorldSystem (ECS: drone orb, red obstacle columns + orbs, red impact orb + ray, blue floor path, tap-floor target ring).
+Room mapping: takeoff spot 1.5 m in front of user at space open, drone nose facing away. Build succeeds. Not flown; Demo toggle exercises the full pipeline.

@@ -47,7 +47,7 @@ struct HelicopterGameApp: App {
         WindowGroup(id: "live-drone-feed") {
             LiveDroneFeedView().environment(appModel)
         }
-        .defaultSize(width: 1280, height: 1300)
+        .defaultSize(width: 1920, height: 1260)
         .windowResizability(.contentSize)
 #endif
 
