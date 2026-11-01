@@ -51,6 +51,8 @@ enum LiveDroneMode {
 struct LiveDroneImmersiveView: View {
     @Environment(AppModel.self) private var appModel
     @State private var liveRoot: Entity?
+    /// Home at drag start, and drone orb offset from home, for the re-center drag.
+    @State private var dragStartHome: SIMD3<Float>?
 
     var body: some View {
         RealityView { content in
@@ -64,6 +66,17 @@ struct LiveDroneImmersiveView: View {
             guard v.entity.name == "floor" else { return }
             let p = v.convert(v.location3D, from: .local, to: .scene)
             AutonomyController.shared.setTarget(LiveWorldComponent.fromScene(p))
+        })
+        .gesture(DragGesture(minimumDistance: 8).targetedToAnyEntity().onChanged { v in
+            guard v.entity.name == "drone" else { return }
+            let start = dragStartHome ?? LiveWorldComponent.home
+            if dragStartHome == nil { dragStartHome = start }
+            let a = v.convert(v.startLocation3D, from: .local, to: .scene)
+            let b = v.convert(v.location3D, from: .local, to: .scene)
+            // Horizontal only: home stays on the floor, height comes from telemetry.
+            LiveWorldComponent.home = start + SIMD3(b.x - a.x, 0, b.z - a.z)
+        }.onEnded { _ in
+            dragStartHome = nil
         })
         .task {
             try? await DualThumbController.shared.start()

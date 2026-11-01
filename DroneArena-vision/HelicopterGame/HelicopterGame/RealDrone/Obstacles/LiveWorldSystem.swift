@@ -6,14 +6,22 @@ import UIKit
 /// Room-scale view of the live drone. The takeoff spot is `home` on the floor, drone nose facing -Z
 /// (away from the user at space open). Dead-reckoning (x forward, y right) maps to RealityKit (y, h, -x).
 struct LiveWorldComponent: Component {
-    static let home = SIMD3<Float>(0, 0, -1.5)
+    static let defaultHome = SIMD3<Float>(0, 0, -1.5)
+    /// Takeoff spot in scene space. Dragging the drone orb moves it (and the whole live world),
+    /// so the orb can be re-centered on the real drone. Persisted across launches.
+    @MainActor static var home: SIMD3<Float> = {
+        let a = UserDefaults.standard.array(forKey: "liveWorldHome") as? [Float]
+        return a?.count == 3 ? SIMD3(a![0], a![1], a![2]) : defaultHome
+    }() {
+        didSet { UserDefaults.standard.set([home.x, home.y, home.z], forKey: "liveWorldHome") }
+    }
     var pathVersion = -1
     var time: Float = 0
 
-    static func toScene(_ p: SIMD2<Double>, height: Double = 0) -> SIMD3<Float> {
+    @MainActor static func toScene(_ p: SIMD2<Double>, height: Double = 0) -> SIMD3<Float> {
         home + SIMD3(Float(p.y), Float(height), -Float(p.x))
     }
-    static func fromScene(_ s: SIMD3<Float>) -> SIMD2<Double> {
+    @MainActor static func fromScene(_ s: SIMD3<Float>) -> SIMD2<Double> {
         let d = s - home
         return SIMD2(Double(-d.z), Double(d.x))
     }
@@ -22,7 +30,7 @@ struct LiveWorldComponent: Component {
 enum LiveWorldBuilder {
     static let blue = UIColor(red: 0.25, green: 0.55, blue: 1, alpha: 1)
 
-    static func make() -> Entity {
+    @MainActor static func make() -> Entity {
         let root = Entity()
         root.name = "live-world"
         root.components.set(LiveWorldComponent())
@@ -36,11 +44,16 @@ enum LiveWorldBuilder {
         root.addChild(floor)
 
         let pad = ModelEntity(mesh: .generateCylinder(height: 0.004, radius: 0.25), materials: [mat(.white, 0.15)])
+        pad.name = "pad"
         pad.position = LiveWorldComponent.home
         root.addChild(pad)
 
         let drone = ModelEntity(mesh: .generateSphere(radius: 0.07), materials: [mat(blue, 1)])
         drone.name = "drone"
+        // Grab target for the re-center drag (larger than the orb for easy pinch).
+        drone.components.set(CollisionComponent(shapes: [.generateSphere(radius: 0.14)]))
+        drone.components.set(InputTargetComponent())
+        drone.components.set(HoverEffectComponent())
         let halo = ModelEntity(mesh: .generateSphere(radius: 0.11), materials: [mat(blue, 0.25)])
         drone.addChild(halo)
         let nose = ModelEntity(mesh: .generateBox(width: 0.015, height: 0.015, depth: 0.25), materials: [mat(.white, 0.9)])
@@ -116,6 +129,7 @@ struct LiveWorldSystem: System {
             drone.position = LiveWorldComponent.toScene(a.pose.xy, height: h)
             drone.orientation = simd_quatf(angle: -Float(a.pose.yaw), axis: [0, 1, 0])
         }
+        root.findEntity(named: "pad")?.position = LiveWorldComponent.home
         root.findEntity(named: "shadow")?.position = LiveWorldComponent.toScene(a.pose.xy, height: 0.003)
 
         if let t = root.findEntity(named: "target") {
