@@ -15,12 +15,16 @@ final class MockTello: @unchecked Sendable {
     private var timer: DispatchSourceTimer?
     private let q = DispatchQueue(label: "mock.tello")
     private var statePacket: String?
+    private var scripted: [String] = []
 
     init() {
         let base = UInt16.random(in: 30000...60000)
         cmdPort = base
         statePort = base + 1
     }
+
+    /// The next replies, in order, before falling back to "ok".
+    func script(_ replies: [String]) { lock.lock(); scripted = replies; lock.unlock() }
 
     var commands: [String] { lock.lock(); defer { lock.unlock() }; return log }
     func commands(prefix: String) -> [String] { commands.filter { $0.hasPrefix(prefix) } }
@@ -45,7 +49,10 @@ final class MockTello: @unchecked Sendable {
             guard let self else { return }
             if let data, let s = String(data: data, encoding: .utf8) {
                 self.lock.lock(); self.log.append(s); self.lock.unlock()
-                c.send(content: Data("ok".utf8), completion: .contentProcessed { _ in })
+                self.lock.lock()
+                let reply = self.scripted.isEmpty ? "ok" : self.scripted.removeFirst()
+                self.lock.unlock()
+                c.send(content: Data(reply.utf8), completion: .contentProcessed { _ in })
             }
             if err == nil { self.read(c) }
         }

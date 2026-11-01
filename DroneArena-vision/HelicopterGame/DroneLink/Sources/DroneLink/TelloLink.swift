@@ -23,6 +23,18 @@ public final class TelloLink {
     /// Set when takeoff was refused (low battery).
     public private(set) var takeoffBlockedReason: String?
     public var governor = SafetyGovernor()
+    /// Last 200 command and reply lines (rc and state packets are counted, not logged).
+    public let log = PacketLog()
+    /// All key/value pairs of the latest 8890 state packet.
+    public private(set) var stateFields: [String: Int] = [:]
+    /// State packets per second over the last full second.
+    public private(set) var stateRate: Double = 0
+    /// Round trip of the last non-rc command, milliseconds.
+    public private(set) var cmdRTT: Int?
+    public private(set) var replyCount = 0
+    /// Set when an insisted command (takeoff, land, streamon) never got `ok`. Cleared on success.
+    public private(set) var commandFailure: String?
+    public private(set) var lastReplyAt: Date?
     public static let minTakeoffBattery = 15
 
     /// Master switch. When false, no rc packets go out.
@@ -44,6 +56,9 @@ public final class TelloLink {
     private var sticksAt = Date.distantPast
     private var timer: Timer?
     private var keepAliveAt = Date()
+    private var cmdSentAt: Date?
+    private var stateWindowStart = Date()
+    private var stateWindowCount = 0
 
     public init(host: String = "192.168.10.1", port: UInt16 = 8889, statePort: UInt16 = 8890) {
         self.host = host
@@ -86,21 +101,56 @@ public final class TelloLink {
         takeoffBlockedReason = nil
         governor.reset()
         sticks = .zero
-        send("takeoff")
         state = .flying
+        Task { [weak self] in
+            guard let self else { return }
+            if await self.insist("takeoff") { return }
+            if self.state == .flying { self.state = .connected }
+            self.commandFailure = "TAKEOFF NOT ACKNOWLEDGED"
+        }
     }
 
     public func land() {
         sticks = .zero
         send("rc 0 0 0 0")
-        send("land")
         if state == .flying { state = .connected }
+        Task { [weak self] in
+            guard let self else { return }
+            if !(await self.insist("land")) { self.commandFailure = "LAND NOT ACKNOWLEDGED" }
+        }
+    }
+
+    /// Sends `cmd` until the drone replies `ok`. The Tello often answers `unkown command!`
+    /// or nothing to the first try. Every attempt lands in `log`.
+    @discardableResult
+    public func insist(_ cmd: String, attempts: Int = 4, gap: TimeInterval = 0.4) async -> Bool {
+        for _ in 0..<max(1, attempts) {
+            let before = replyCount
+            send(cmd)
+            let end = Date().addingTimeInterval(gap)
+            var acked = false
+            while Date() < end {
+                if replyCount > before {
+                    acked = lastReply == "ok"
+                    break
+                }
+                try? await Task.sleep(for: .milliseconds(20))
+            }
+            if acked { commandFailure = nil; return true }
+            let rest = end.timeIntervalSinceNow
+            if rest > 0 { try? await Task.sleep(for: .seconds(rest)) }
+        }
+        return false
     }
 
     /// Opens the UDP 11111 listener and tells the drone to stream.
+    /// The listener starts only after `streamon` returns `ok`.
     public func startVideo() {
-        video.start()
-        send("streamon")
+        Task { [weak self] in
+            guard let self else { return }
+            if await self.insist("streamon") { self.video.start() }
+            else { self.commandFailure = "VIDEO NOT ACKNOWLEDGED" }
+        }
     }
 
     public func stopVideo() {
@@ -113,6 +163,9 @@ public final class TelloLink {
         send("emergency")
         if state == .flying { state = .connected }
     }
+
+    /// Sends a raw SDK command (used by the connector handshake).
+    public func sendCommand(_ text: String) { send(text) }
 
     public func update(_ s: DroneSticks) {
         sticks = s
@@ -169,6 +222,10 @@ public final class TelloLink {
     }
 
     private func send(_ text: String) {
+        if !text.hasPrefix("rc ") {
+            cmdSentAt = Date()
+            log.append(.tx, text)
+        }
         cmdConn?.send(content: Data(text.utf8), completion: .contentProcessed { _ in })
     }
 
@@ -179,6 +236,10 @@ public final class TelloLink {
                 if let data, let s = String(data: data, encoding: .utf8) {
                     let t = s.trimmingCharacters(in: .whitespacesAndNewlines)
                     self.lastReply = t
+                    self.replyCount += 1
+                    self.lastReplyAt = Date()
+                    self.log.append(.rx, t)
+                    if let at = self.cmdSentAt { self.cmdRTT = Int(Date().timeIntervalSince(at) * 1000) }
                     if let b = Int(t) { self.battery = b }
                 }
                 if error == nil { self.receiveLoop(c) }
@@ -196,11 +257,24 @@ public final class TelloLink {
         stateListener = l
     }
 
+    private func noteState(_ f: [String: Int]) {
+        stateFields = f
+        stateWindowCount += 1
+        let now = Date()
+        let dt = now.timeIntervalSince(stateWindowStart)
+        if dt >= 1 {
+            stateRate = Double(stateWindowCount) / dt
+            stateWindowCount = 0
+            stateWindowStart = now
+        }
+    }
+
     nonisolated private func readState(_ conn: NWConnection) {
         conn.receiveMessage { [weak self] data, _, _, error in
             if let data, let s = String(data: data, encoding: .utf8) {
                 let f = TelloState.parse(s)
                 Task { @MainActor in
+                    self?.noteState(f)
                     if let b = f["bat"] { self?.battery = b }
                     if let h = f["h"] { self?.heightCM = h }
                     self?.stateAt = Date()

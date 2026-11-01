@@ -22,3 +22,6 @@ SafetyGovernor + TelloLink (statePort init arg, stateAt, safety, takeoffBlockedR
 
 ## Design pass done
 LiveTheme, LiveHUD, LiveAltitudeTape, LiveControls, LiveDroneFeedView split; home button restyled. Sim + device builds succeed. Not run on device.
+
+## Stage 4 done
+TelloConnector (idle, joiningWiFi, handshaking, ready, failed), PacketLog (200 ring), TelloLink.insist (4 tries, 0.4 s, ok only; used for command, streamon, takeoff, land; commandFailure shown in safety strip), stats (stateRate, cmdRTT, stateFields, nalCounts, bytesPerSecond). App: LiveConnectButton, LiveDebugView, gear Debug toggle. Tests: 41 pass. Sim + device builds succeed. No entitlements file for the target, so no NEHotspotConfiguration join; manual join with 1 s poll. Not run on hardware.

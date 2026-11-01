@@ -10,9 +10,8 @@ struct LiveControls: View {
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 8) {
+            LiveConnectButton(bridge: bridge)
             HStack(spacing: 8) {
-                Button("Connect") { bridge.start(); link.startVideo() }
-                    .buttonStyle(LiveChipStyle()).disabled(bridge.isActive)
                 Button("Arm") { link.sticksEnabled.toggle() }
                     .buttonStyle(LiveChipStyle(filled: link.sticksEnabled))
                     .disabled(link.state == .disconnected)
@@ -32,8 +31,11 @@ struct LiveControls: View {
                 .buttonStyle(.plain)
                 .popover(isPresented: $showSettings) {
                     @Bindable var b = bridge
-                    Toggle(isOn: $b.invertPitch) { LiveLabel("Invert pitch", color: LiveTheme.text) }
-                        .padding(16).frame(width: 240)
+                    VStack(spacing: 12) {
+                        Toggle(isOn: $b.invertPitch) { LiveLabel("Invert pitch", color: LiveTheme.text) }
+                        Toggle(isOn: $b.showDebug) { LiveLabel("Debug", color: LiveTheme.text) }
+                    }
+                    .padding(16).frame(width: 240)
                 }
             }
         }

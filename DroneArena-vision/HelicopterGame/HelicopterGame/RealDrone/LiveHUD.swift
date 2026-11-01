@@ -55,6 +55,7 @@ struct LiveSafetyStrip: View {
         let none = (fg: Color.white, bg: Color.black, border: Color.white)
         switch link.safety {
         case .normal:
+            if let f = link.commandFailure { return (f, red.fg, red.bg, red.border) }
             return link.takeoffBlockedReason.map { ("Takeoff blocked. \($0)", red.fg, red.bg, red.border) }
         case .warning: return ("ALT \(ft). Near ceiling", warn.fg, warn.bg, warn.border)
         case .ceiling: return ("ALT \(ft). Ceiling, climb stopped", red.fg, red.bg, red.border)

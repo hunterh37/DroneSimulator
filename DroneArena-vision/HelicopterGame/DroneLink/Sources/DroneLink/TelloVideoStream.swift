@@ -12,6 +12,11 @@ public final class TelloVideoStream {
     public private(set) var framesDecoded: Int = 0
     public private(set) var lastFrameAt: Date?
     public private(set) var isListening = false
+    /// NAL unit counts by type (1 slice, 5 IDR, 7 SPS, 8 PPS).
+    public private(set) var nalCounts: [Int: Int] = [:]
+    public private(set) var totalBytes = 0
+    /// Received bytes per second over the last full second.
+    public private(set) var bytesPerSecond: Double = 0
 
     @ObservationIgnored public let displayLayer: AVSampleBufferDisplayLayer = {
         let l = AVSampleBufferDisplayLayer()
@@ -29,6 +34,8 @@ public final class TelloVideoStream {
     @ObservationIgnored private var format: CMVideoFormatDescription?
     @ObservationIgnored private var windowStart = Date()
     @ObservationIgnored private var windowFrames = 0
+    @ObservationIgnored private var byteWindowStart = Date()
+    @ObservationIgnored private var byteWindow = 0
 
     public init(port: UInt16 = 11111) { self.port = port }
 
@@ -51,6 +58,7 @@ public final class TelloVideoStream {
         sps = nil; pps = nil; format = nil
         displayLayer.flushAndRemoveImage()
         fps = 0
+        bytesPerSecond = 0
         isListening = false
     }
 
@@ -71,10 +79,24 @@ public final class TelloVideoStream {
 
     /// Public for tests and replay: feed raw stream bytes.
     public func ingest(_ data: Data) {
+        countBytes(data.count)
         for nal in parser.feed([UInt8](data)) { handle(nal) }
     }
 
+    private func countBytes(_ n: Int) {
+        totalBytes += n
+        byteWindow += n
+        let now = Date()
+        let dt = now.timeIntervalSince(byteWindowStart)
+        if dt >= 1 {
+            bytesPerSecond = Double(byteWindow) / dt
+            byteWindow = 0
+            byteWindowStart = now
+        }
+    }
+
     private func handle(_ nal: NALUnit) {
+        nalCounts[Int(nal.type), default: 0] += 1
         switch nal.type {
         case 7:
             if sps != nal.bytes { sps = nal.bytes; format = nil }

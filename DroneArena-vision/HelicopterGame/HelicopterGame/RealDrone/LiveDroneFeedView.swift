@@ -25,6 +25,9 @@ struct LiveDroneFeedView: View {
             }
         }
         .overlay(alignment: .leading) { LiveAltitudeTape(heightCM: link.heightCM).padding(.leading, 16) }
+        .overlay(alignment: .trailing) {
+            if bridge.showDebug { LiveDebugView(bridge: bridge).padding(.top, 56).padding(.bottom, 130) }
+        }
         .overlay(alignment: .bottomLeading) {
             LiveStickReadout(sticks: bridge.sticks, rc: link.lastRC).padding(16)
         }

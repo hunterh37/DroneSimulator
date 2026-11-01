@@ -11,19 +11,32 @@ import Observation
 final class RealDroneBridge {
     static let shared = RealDroneBridge()
 
-    let link = TelloLink()
+    let link: TelloLink
+    let connector: TelloConnector
     var invertPitch = false
+    /// Shows the debug panel over the feed.
+    var showDebug = false
     /// True only while Live Drone mode is open. Nothing is sent otherwise.
     private(set) var isActive = false
     private(set) var sticks = DroneSticks.zero
     private var timer: Timer?
 
-    private init() {}
+    private init() {
+        let l = TelloLink()
+        link = l
+        connector = TelloConnector(link: l)
+        connector.startsVideo = true
+    }
 
-    func start() {
+    /// One-button connect: starts the stick sampler, then the connector flow.
+    func connect() {
+        start()
+        connector.connect()
+    }
+
+    private func start() {
         guard timer == nil else { return }
         isActive = true
-        link.connect()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { _ in
             Task { @MainActor in RealDroneBridge.shared.sample() }
         }
@@ -31,6 +44,7 @@ final class RealDroneBridge {
 
     func stop() {
         isActive = false
+        connector.cancel()
         link.sticksEnabled = false
         link.land()
         link.stopVideo()
