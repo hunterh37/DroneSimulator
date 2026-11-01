@@ -86,3 +86,16 @@ struct PathPlannerTests {
         #expect(minGap > 0.2)
     }
 }
+
+struct ReckonerYawZeroTests {
+    @Test func headingRelativeToTakeoffYaw() {
+        var r = DeadReckoner()
+        let t0 = Date()
+        r.add(vgx: 0, vgy: 0, yaw: 47, at: t0)
+        r.add(vgx: 10, vgy: 0, yaw: 47, at: t0.addingTimeInterval(1))
+        #expect(r.yCM == 0)
+        #expect(r.xCM > 0)
+        #expect(abs(r.heading(137) - .pi / 2) < 1e-9)
+        #expect(abs(r.heading(-170 + 47 - 20) - r.heading(-143)) < 1e-9)
+    }
+}

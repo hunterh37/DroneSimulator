@@ -36,12 +36,16 @@ public struct DeadReckoner: Equatable, Sendable {
     public private(set) var xCM = 0.0
     public private(set) var yCM = 0.0
     public private(set) var isValid = true
+    /// Raw Tello yaw at the first sample after reset. Tello yaw is relative to power-on heading,
+    /// so headings are taken relative to this to keep x pointing along the takeoff nose.
+    public private(set) var yawZero: Int?
     private var lastAt: Date?
 
     public init() {}
 
     public mutating func add(vgx: Int, vgy: Int, yaw: Int, at: Date) {
         guard isValid else { return }
+        if yawZero == nil { yawZero = yaw }
         defer { lastAt = at }
         guard let lastAt else { return }
         let dt = at.timeIntervalSince(lastAt)
@@ -61,6 +65,7 @@ public struct DeadReckoner: Equatable, Sendable {
         xCM = 0
         yCM = 0
         isValid = true
+        yawZero = nil
         lastAt = nil
     }
 
@@ -80,5 +85,11 @@ public struct DeadReckoner: Equatable, Sendable {
         )
     }
 
-    private func heading(_ yaw: Int) -> Double { Double(yaw) * calibration.yawSign * .pi / 180 }
+    /// Heading in radians relative to the takeoff nose, wrapped to -pi...pi.
+    public func heading(_ yaw: Int) -> Double {
+        var d = Double(yaw - (yawZero ?? yaw))
+        while d > 180 { d -= 360 }
+        while d < -180 { d += 360 }
+        return d * calibration.yawSign * .pi / 180
+    }
 }

@@ -131,7 +131,7 @@ public final class TelloLink {
         governor.reset()
         reckoner.reset()
         // Starts the gap clock now, so missing telemetry right after takeoff also loses home.
-        reckoner.add(vgx: 0, vgy: 0, yaw: 0, at: Date())
+        reckoner.add(vgx: 0, vgy: 0, yaw: stateFields["yaw"] ?? 0, at: Date())
         returnStatus = .idle
         sticks = .zero
         state = .flying

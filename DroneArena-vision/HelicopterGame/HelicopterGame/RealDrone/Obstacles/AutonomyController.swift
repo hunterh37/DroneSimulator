@@ -150,7 +150,7 @@ final class AutonomyController {
 
     static func realPose(_ link: TelloLink) -> DronePose {
         let r = link.reckoner
-        let yaw = Double(link.stateFields["yaw"] ?? 0) * r.calibration.yawSign * .pi / 180
+        let yaw = r.heading(link.stateFields["yaw"] ?? 0)
         return DronePose(x: r.xCM / 100, y: r.yCM / 100, yaw: yaw, heightM: Double(link.heightCM ?? 0) / 100)
     }
 
