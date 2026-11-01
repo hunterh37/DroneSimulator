@@ -56,6 +56,14 @@ struct LiveSafetyStrip: View {
         switch link.safety {
         case .normal:
             if let f = link.commandFailure { return (f, red.fg, red.bg, red.border) }
+            switch link.returnStatus {
+            case .idle: break
+            case .returning: return ("Returning home", warn.fg, warn.bg, warn.border)
+            case .arrived: return ("Home reached. Landing", warn.fg, warn.bg, warn.border)
+            case .pilotTookOver: return ("Return cancelled. Pilot control", none.fg, none.bg, none.border)
+            case .positionLost: return ("Position lost. Landing here", red.fg, red.bg, red.border)
+            case .timedOut: return ("Return timed out. Landing here", red.fg, red.bg, red.border)
+            }
             return link.takeoffBlockedReason.map { ("Takeoff blocked. \($0)", red.fg, red.bg, red.border) }
         case .warning: return ("ALT \(ft). Near ceiling", warn.fg, warn.bg, warn.border)
         case .ceiling: return ("ALT \(ft). Ceiling, climb stopped", red.fg, red.bg, red.border)

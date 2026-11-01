@@ -25,3 +25,6 @@ LiveTheme, LiveHUD, LiveAltitudeTape, LiveControls, LiveDroneFeedView split; hom
 
 ## Stage 4 done
 TelloConnector (idle, joiningWiFi, handshaking, ready, failed), PacketLog (200 ring), TelloLink.insist (4 tries, 0.4 s, ok only; used for command, streamon, takeoff, land; commandFailure shown in safety strip), stats (stateRate, cmdRTT, stateFields, nalCounts, bytesPerSecond). App: LiveConnectButton, LiveDebugView, gear Debug toggle. Tests: 41 pass. Sim + device builds succeed. No entitlements file for the target, so no NEHotspotConfiguration join; manual join with 1 s poll. Not run on hardware.
+
+## Return home done
+DeadReckoner + VelocityCalibration + ReturnStatus (DroneLink/DeadReckoner.swift). TelloLink: returnHome, canReturnHome, returnStatus, reckoner, returnTimeout, returnSpeedLimit. App: Return chip behind Debug, safety strip text, Home row in debug view. Tests: 61 pass. Calibration is assumed, not measured. Not flown. Task 4 of notes/PLAN-return-to-home.md is the remaining hardware gate.

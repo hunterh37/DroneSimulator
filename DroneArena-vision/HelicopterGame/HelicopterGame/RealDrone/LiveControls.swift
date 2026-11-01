@@ -18,6 +18,12 @@ struct LiveControls: View {
                 Button("Take off") { link.takeoff() }
                     .buttonStyle(LiveChipStyle())
                     .disabled(link.state != .connected || !link.sticksEnabled)
+                // shortcut: hidden behind Debug until Task 4 of notes/PLAN-return-to-home.md passes
+                if bridge.showDebug {
+                    Button("Return") { link.returnHome() }
+                        .buttonStyle(LiveChipStyle())
+                        .disabled(!link.canReturnHome)
+                }
                 Button("Land") { link.land() }.buttonStyle(LiveChipStyle())
                 Button("Kill") { link.emergency() }.buttonStyle(LiveChipStyle(danger: true))
             }

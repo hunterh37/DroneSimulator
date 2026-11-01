@@ -43,6 +43,7 @@ struct LiveDebugView: View {
             row("Ports", "cmd \(link.port)  state \(link.statePort)  video \(video.port)")
             row("SSID", "n/a")
             row("Last rc", link.lastRC)
+            row("Home", String(format: "x %.0f  y %.0f cm", link.reckoner.xCM, link.reckoner.yCM) + (link.reckoner.isValid ? "" : "  LOST"))
         }
     }
 
