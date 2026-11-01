@@ -8,7 +8,7 @@ struct DeadReckonerTests {
 
     func moved(_ c: VelocityCalibration = .init(), vgx: Int = 10, vgy: Int = 0, yaw: Int = 0) -> DeadReckoner {
         var d = DeadReckoner(); d.calibration = c
-        d.add(vgx: vgx, vgy: vgy, yaw: yaw, at: t0)
+        d.add(vgx: vgx, vgy: vgy, yaw: 0, at: t0)  // takeoff nose at yaw 0
         d.add(vgx: vgx, vgy: vgy, yaw: yaw, at: t0.addingTimeInterval(1))
         return d
     }
@@ -50,5 +50,25 @@ struct DeadReckonerTests {
         let slow = try #require(moved(vgx: 6).homeSticks(yaw: 0))
         let far = try #require(moved(vgx: 100).homeSticks(yaw: 0))
         #expect(abs(slow.pitch + 0.4) < 0.01 && abs(far.pitch + 1) < 0.01)
+    }
+}
+
+struct AutoCalibratorTests {
+    @Test func learnsSwappedNegatedAxesAndReintegrates() {
+        var r = DeadReckoner()
+        let t0 = Date()
+        _ = r.add(vgx: 0, vgy: 0, yaw: 0, at: t0)
+        // Forward command reports as -vgy; right command reports as +vgx.
+        var changed = false
+        for i in 1...30 {
+            let fwd = i % 2 == 0
+            let s = DroneSticks(yaw: 0, throttle: 0, roll: fwd ? 0 : 0.5, pitch: fwd ? 0.5 : 0)
+            changed = r.add(vgx: fwd ? 0 : 3, vgy: fwd ? -3 : 0, yaw: 0, at: t0.addingTimeInterval(Double(i) * 0.1), commanded: s) || changed
+        }
+        #expect(changed)
+        #expect(r.calibration.swapAxes)
+        #expect(r.calibration.xSign == -1)
+        #expect(r.xCM > 0)
+        #expect(r.yCM > 0)
     }
 }

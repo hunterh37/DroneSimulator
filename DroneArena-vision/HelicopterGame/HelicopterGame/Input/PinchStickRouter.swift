@@ -1,6 +1,8 @@
 #if os(visionOS)
 import DicyaninThumbController
+import Foundation
 import PinchStick
+import PinchStickCore
 import RealityKit
 import simd
 
@@ -11,6 +13,18 @@ final class PinchStickRouter {
     static let shared = PinchStickRouter()
     private(set) var isRunning = false
     let controller = PinchStickController()
+    private weak var root: Entity?
+
+    /// Pinch-drag sticks or thumb-on-index 3D thumbsticks. Persisted; restarts live input.
+    var mode: StickMode {
+        get { StickMode(rawValue: UserDefaults.standard.string(forKey: "stickMode") ?? "") ?? .pinch }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: "stickMode")
+            controller.mode = newValue
+            guard isRunning, let root else { return }
+            Task { await start(rootEntity: root) }
+        }
+    }
 
     private init() {
         controller.onOutput = { out in
@@ -25,6 +39,8 @@ final class PinchStickRouter {
 
     func start(rootEntity: Entity) async {
         isRunning = true
+        root = rootEntity
+        controller.mode = mode
         DualThumbController.shared.isHandTrackingInputEnabled = false
         await controller.start(rootEntity: rootEntity)
     }

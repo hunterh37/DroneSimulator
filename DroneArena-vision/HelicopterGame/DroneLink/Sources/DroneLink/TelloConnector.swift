@@ -102,9 +102,10 @@ public final class TelloConnector {
     /// Sends `command` until `ok` arrives. Opens the socket first when needed.
     private func handshake(attempts: Int) async -> Bool {
         if link.state != .connected {
-            link.connect()
-            for _ in 0..<20 where link.state != .connected {
-                try? await Task.sleep(for: .milliseconds(15))
+            // Keep a socket that is still coming up; reopening every poll meant it never got ready.
+            if link.state != .connecting { link.connect() }
+            for _ in 0..<100 where link.state != .connected && !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(20))
             }
         }
         if Task.isCancelled { return false }

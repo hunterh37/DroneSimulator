@@ -53,6 +53,8 @@ struct LiveDroneImmersiveView: View {
     @State private var liveRoot: Entity?
     /// Home at drag start, and drone orb offset from home, for the re-center drag.
     @State private var dragStartHome: SIMD3<Float>?
+    /// Home yaw at the start of a two-hand rotate on the drone orb.
+    @State private var rotateStartYaw: Float?
 
     var body: some View {
         RealityView { content in
@@ -68,6 +70,12 @@ struct LiveDroneImmersiveView: View {
             AutonomyController.shared.setTarget(LiveWorldComponent.fromScene(p))
         })
         .gesture(DragGesture(minimumDistance: 8).targetedToAnyEntity().onChanged { v in
+            if v.entity.name == "pad" {
+                // Point the nose arrow at the hand: yaw 0 is -Z, positive turns toward -X.
+                let d = v.convert(v.location3D, from: .local, to: .scene) - LiveWorldComponent.home
+                if d.x * d.x + d.z * d.z > 0.01 { LiveWorldComponent.homeYaw = atan2(-d.x, -d.z) }
+                return
+            }
             guard v.entity.name == "drone" else { return }
             let start = dragStartHome ?? LiveWorldComponent.home
             if dragStartHome == nil { dragStartHome = start }
@@ -77,6 +85,17 @@ struct LiveDroneImmersiveView: View {
             LiveWorldComponent.home = start + SIMD3(b.x - a.x, 0, b.z - a.z)
         }.onEnded { _ in
             dragStartHome = nil
+        })
+        .simultaneousGesture(RotateGesture3D(constrainedToAxis: .y).targetedToAnyEntity().onChanged { v in
+            guard v.entity.name == "drone" || v.entity.name == "pad" else { return }
+            let start = rotateStartYaw ?? LiveWorldComponent.homeYaw
+            if rotateStartYaw == nil { rotateStartYaw = start }
+            // Twist about +Y from the two-hand rotation quaternion.
+            let q = v.rotation.quaternion
+            let twist = Float(2 * atan2(q.imag.y, q.real))
+            LiveWorldComponent.homeYaw = start + twist
+        }.onEnded { _ in
+            rotateStartYaw = nil
         })
         .task {
             try? await DualThumbController.shared.start()

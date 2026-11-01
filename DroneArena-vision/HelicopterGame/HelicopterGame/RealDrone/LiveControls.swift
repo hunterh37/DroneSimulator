@@ -42,6 +42,7 @@ struct LiveControls: View {
                     VStack(spacing: 12) {
                         Toggle(isOn: $b.invertPitch) { LiveLabel("Invert pitch", color: LiveTheme.text) }
                         Toggle(isOn: $b.showDebug) { LiveLabel("Debug", color: LiveTheme.text) }
+                        PinchVisualsToggle()
                     }
                     .padding(16).frame(width: 240)
                 }

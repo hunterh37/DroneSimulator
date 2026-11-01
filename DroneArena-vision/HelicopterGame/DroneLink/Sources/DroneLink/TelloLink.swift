@@ -40,7 +40,20 @@ public final class TelloLink {
     /// Outcome of the current or last return to home. Reset on takeoff.
     public private(set) var returnStatus: ReturnStatus = .idle
     /// Position relative to takeoff. Holds the flight-measured calibration.
-    public var reckoner = DeadReckoner()
+    public var reckoner: DeadReckoner = {
+        var r = DeadReckoner()
+        if let c = TelloLink.loadCalibration() { r.calibration = c }
+        return r
+    }()
+
+    private static let calibKey = "telloVelocityCalibration"
+    static func saveCalibration(_ c: VelocityCalibration) {
+        UserDefaults.standard.set([c.bodyFrame ? 1 : 0, c.swapAxes ? 1 : 0, c.xSign, c.ySign], forKey: calibKey)
+    }
+    static func loadCalibration() -> VelocityCalibration? {
+        guard let a = UserDefaults.standard.array(forKey: calibKey) as? [Double], a.count == 4 else { return nil }
+        return VelocityCalibration(bodyFrame: a[0] == 1, swapAxes: a[1] == 1, xSign: a[2], ySign: a[3])
+    }
     public var returnTimeout: TimeInterval = 45
     public static let returnSpeedLimit = 30
     private static let takeoverStick: Float = 0.2
@@ -67,6 +80,8 @@ public final class TelloLink {
     private var cmdConn: NWConnection?
     private var stateListener: NWListener?
     private var sticks = DroneSticks.zero
+    /// Last sticks actually sent, used to auto-calibrate the velocity frame.
+    private var sentSticks = DroneSticks.zero
     private var sticksAt = Date.distantPast
     private var timer: Timer?
     private var keepAliveAt = Date()
@@ -219,14 +234,16 @@ public final class TelloLink {
         video.start()
         Task { [weak self] in
             guard let self else { return }
+            // Counters survive a reconnect; compare against the count at start, not zero.
+            let base = self.video.framesDecoded
             let acked = await self.insist("streamon")
-            for _ in 0..<6 where self.video.framesDecoded == 0 && self.state != .disconnected {
+            for _ in 0..<6 where self.video.framesDecoded == base && self.state != .disconnected {
                 try? await Task.sleep(for: .seconds(2))
-                if self.video.framesDecoded > 0 { break }
+                if self.video.framesDecoded > base { break }
                 FileLog.shared.write("video", "no frames, resend streamon (bytes \(self.video.totalBytes))")
                 await self.insist("streamon", attempts: 1, gap: 0.5)
             }
-            if self.video.framesDecoded == 0 {
+            if self.video.framesDecoded == base {
                 self.commandFailure = acked ? "VIDEO: NO FRAMES" : "VIDEO NOT ACKNOWLEDGED"
             }
         }
@@ -252,9 +269,9 @@ public final class TelloLink {
         sticks = s
         let now = Date()
         sticksAt = now
-        // Send stick changes right away (capped at 40 Hz) instead of waiting for the next timer tick.
+        // Send stick changes right away, but never faster than sendRate (Tello queues excess rc packets).
         if changed, state == .flying, sticksEnabled, returnStatus != .returning,
-           now.timeIntervalSince(keepAliveAt) >= 1.0 / 40 { tick() }
+           now.timeIntervalSince(keepAliveAt) >= rcInterval { tick() }
     }
 
     // MARK: internals
@@ -267,8 +284,9 @@ public final class TelloLink {
             startTimer()
         case .failed(let e):
             state = .failed(e.localizedDescription)
-        case .waiting(let e):
-            state = .failed("waiting: \(e.localizedDescription)")
+        case .waiting:
+            // NWConnection retries on its own once the Wi-Fi path is up; tearing it down restarts the wait.
+            state = .connecting
         default:
             break
         }
@@ -281,8 +299,18 @@ public final class TelloLink {
         }
     }
 
+    private var rcInterval: TimeInterval { 1 / max(1, sendRate) }
+
+    private func sendRC(_ rc: String, at now: Date) {
+        if rc != lastRC { lastRC = rc }
+        send(rc)
+        keepAliveAt = now
+    }
+
     private func tick() {
         let now = Date()
+        // A stick change already sent this slot; skip the timer packet so the drone gets one rc per interval.
+        if state == .flying, now.timeIntervalSince(keepAliveAt) < rcInterval * 0.8 { return }
         if state != .flying {
             safety = .normal
             cancelReturn()
@@ -293,17 +321,14 @@ public final class TelloLink {
             let g = governor.apply(sticksEnabled && now.timeIntervalSince(sticksAt) < staleAfter ? sticks : .zero,
                                    heightCM: heightCM, telemetryAge: age)
             safety = g.status
+            sentSticks = sticksEnabled ? g.sticks : .zero
             if sticksEnabled {
-                lastRC = g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone, minOutput: minOutput)
-                send(lastRC)
-                keepAliveAt = now
+                sendRC(g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone, minOutput: minOutput), at: now)
                 return
             }
         }
         if state == .flying, !sticksEnabled, now.timeIntervalSince(keepAliveAt) > 0.5 {
-            lastRC = "rc 0 0 0 0"
-            send(lastRC)
-            keepAliveAt = now
+            sendRC("rc 0 0 0 0", at: now)
         } else if state != .flying, now.timeIntervalSince(keepAliveAt) > 5 {
             send("battery?")   // Tello auto-lands after 15 s without commands
             keepAliveAt = now
@@ -348,9 +373,7 @@ public final class TelloLink {
         slow.pitch *= scale
         let g = governor.apply(slow, heightCM: heightCM, telemetryAge: now.timeIntervalSince(at))
         safety = g.status
-        lastRC = g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone, minOutput: 0)
-        send(lastRC)
-        keepAliveAt = now
+        sendRC(g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone, minOutput: 0), at: now)
         return true
     }
 
@@ -400,7 +423,11 @@ public final class TelloLink {
         stateWindowCount += 1
         let now = Date()
         if state == .flying, let vgx = f["vgx"], let vgy = f["vgy"], let yaw = f["yaw"] {
-            reckoner.add(vgx: vgx, vgy: vgy, yaw: yaw, at: now)
+            if reckoner.add(vgx: vgx, vgy: vgy, yaw: yaw, at: now, commanded: sentSticks) {
+                let c = reckoner.calibration
+                FileLog.shared.write("calib", "body=\(c.bodyFrame) swap=\(c.swapAxes) x=\(c.xSign) y=\(c.ySign)")
+                Self.saveCalibration(c)
+            }
         }
         let dt = now.timeIntervalSince(stateWindowStart)
         if dt >= 1 {

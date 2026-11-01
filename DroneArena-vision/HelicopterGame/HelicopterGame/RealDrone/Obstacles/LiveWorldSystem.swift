@@ -15,14 +15,19 @@ struct LiveWorldComponent: Component {
     }() {
         didSet { UserDefaults.standard.set([home.x, home.y, home.z], forKey: "liveWorldHome") }
     }
+    /// Scene rotation (radians about +Y) of the takeoff nose. 0 is -Z. Dragging the home pad sets it,
+    /// so the pad arrow can be lined up with the real drone's nose. Persisted.
+    @MainActor static var homeYaw: Float = UserDefaults.standard.float(forKey: "liveWorldHomeYaw") {
+        didSet { UserDefaults.standard.set(homeYaw, forKey: "liveWorldHomeYaw") }
+    }
     var pathVersion = -1
     var time: Float = 0
 
     @MainActor static func toScene(_ p: SIMD2<Double>, height: Double = 0) -> SIMD3<Float> {
-        home + SIMD3(Float(p.y), Float(height), -Float(p.x))
+        home + simd_quatf(angle: homeYaw, axis: [0, 1, 0]).act(SIMD3(Float(p.y), Float(height), -Float(p.x)))
     }
     @MainActor static func fromScene(_ s: SIMD3<Float>) -> SIMD2<Double> {
-        let d = s - home
+        let d = simd_quatf(angle: -homeYaw, axis: [0, 1, 0]).act(s - home)
         return SIMD2(Double(-d.z), Double(d.x))
     }
 }
@@ -46,6 +51,17 @@ enum LiveWorldBuilder {
         let pad = ModelEntity(mesh: .generateCylinder(height: 0.004, radius: 0.25), materials: [mat(.white, 0.15)])
         pad.name = "pad"
         pad.position = LiveWorldComponent.home
+        pad.components.set(CollisionComponent(shapes: [.generateBox(width: 0.6, height: 0.05, depth: 0.6)]))
+        pad.components.set(InputTargetComponent())
+        pad.components.set(HoverEffectComponent())
+        // Nose arrow: line the real drone's nose up with it, or drag the pad to rotate it.
+        let shaft = ModelEntity(mesh: .generateBox(width: 0.03, height: 0.006, depth: 0.4), materials: [mat(.white, 0.9)])
+        shaft.position = [0, 0.004, -0.2]
+        pad.addChild(shaft)
+        let tip = ModelEntity(mesh: .generateCone(height: 0.1, radius: 0.06), materials: [mat(.white, 0.9)])
+        tip.orientation = simd_quatf(angle: -.pi / 2, axis: [1, 0, 0])
+        tip.position = [0, 0.004, -0.44]
+        pad.addChild(tip)
         root.addChild(pad)
 
         let drone = ModelEntity(mesh: .generateSphere(radius: 0.07), materials: [mat(blue, 1)])
@@ -126,11 +142,20 @@ struct LiveWorldSystem: System {
         let h = max(a.pose.heightM, a.demo ? 1.2 : 0.1)
 
         if let drone = root.findEntity(named: "drone") {
-            drone.position = LiveWorldComponent.toScene(a.pose.xy, height: h)
-            drone.orientation = simd_quatf(angle: -Float(a.pose.yaw), axis: [0, 1, 0])
+            // Telemetry arrives ~10 Hz in dm/s steps; ease toward it so the orb tracks without jitter.
+            let k = 1 - exp(-dt * 14)
+            let goal = LiveWorldComponent.toScene(a.pose.xy, height: h)
+            drone.position = simd_distance(drone.position, goal) > 2 ? goal : simd_mix(drone.position, goal, .init(repeating: k))
+            let q = simd_quatf(angle: LiveWorldComponent.homeYaw - Float(a.pose.yaw), axis: [0, 1, 0])
+            drone.orientation = simd_slerp(drone.orientation, q, k)
         }
-        root.findEntity(named: "pad")?.position = LiveWorldComponent.home
-        root.findEntity(named: "shadow")?.position = LiveWorldComponent.toScene(a.pose.xy, height: 0.003)
+        if let pad = root.findEntity(named: "pad") {
+            pad.position = LiveWorldComponent.home
+            pad.orientation = simd_quatf(angle: LiveWorldComponent.homeYaw, axis: [0, 1, 0])
+        }
+        if let drone = root.findEntity(named: "drone") {
+            root.findEntity(named: "shadow")?.position = [drone.position.x, LiveWorldComponent.home.y + 0.003, drone.position.z]
+        }
 
         if let t = root.findEntity(named: "target") {
             t.isEnabled = a.target != nil

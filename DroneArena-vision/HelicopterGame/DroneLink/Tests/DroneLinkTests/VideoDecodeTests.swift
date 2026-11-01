@@ -74,3 +74,29 @@ import Network
     conn.cancel()
     stream.stop()
 }
+
+/// Second stream session after stop/start must decode again (used to need a drone reboot).
+@MainActor
+@Test func udpSecondSessionDecodes() async throws {
+    let url = try #require(Bundle.module.url(forResource: "tello_like", withExtension: "h264", subdirectory: "Fixtures"))
+    let data = try Data(contentsOf: url)
+    let port = UInt16.random(in: 48001...52000)
+    let stream = TelloVideoStream(port: port)
+    for session in 1...2 {
+        stream.start()
+        let base = stream.framesDecoded
+        let conn = NWConnection(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port)!, using: .udp)
+        conn.start(queue: .main)
+        var i = 0
+        while i < data.count {
+            let n = min(1460, data.count - i)
+            conn.send(content: data.subdata(in: i..<(i + n)), completion: .contentProcessed { _ in })
+            i += n
+            try? await Task.sleep(for: .milliseconds(2))
+        }
+        for _ in 0..<100 where stream.framesDecoded - base < 25 { try? await Task.sleep(for: .milliseconds(20)) }
+        #expect(stream.framesDecoded - base >= 25, "session \(session)")
+        conn.cancel()
+        stream.stop()
+    }
+}

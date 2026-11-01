@@ -33,6 +33,11 @@ public struct DeadReckoner: Equatable, Sendable {
     public static let arriveCM = 50.0
 
     public var calibration = VelocityCalibration()
+    /// Learns frame/swap/signs in flight from commanded sticks. Off when false.
+    public var autoCalibrate = true
+    public private(set) var calibrator = AutoCalibrator()
+    private var log: [Sample] = []
+    private struct Sample: Equatable, Sendable { var vgx: Int, vgy: Int, yaw: Int, dt: Double }
     public private(set) var xCM = 0.0
     public private(set) var yCM = 0.0
     public private(set) var isValid = true
@@ -43,20 +48,37 @@ public struct DeadReckoner: Equatable, Sendable {
 
     public init() {}
 
-    public mutating func add(vgx: Int, vgy: Int, yaw: Int, at: Date) {
-        guard isValid else { return }
+    /// Returns true when auto-calibration changed `calibration` (position is re-integrated).
+    @discardableResult
+    public mutating func add(vgx: Int, vgy: Int, yaw: Int, at: Date, commanded: DroneSticks? = nil) -> Bool {
+        guard isValid else { return false }
         if yawZero == nil { yawZero = yaw }
         defer { lastAt = at }
-        guard let lastAt else { return }
+        guard let lastAt else { return false }
         let dt = at.timeIntervalSince(lastAt)
         guard dt <= Self.maxGap else {
             isValid = false
-            return
+            return false
         }
+        integrate(vgx: vgx, vgy: vgy, yaw: yaw, dt: dt)
+        if log.count < 30_000 { log.append(Sample(vgx: vgx, vgy: vgy, yaw: yaw, dt: dt)) }
+        guard autoCalibrate, let commanded else { return false }
+        calibrator.add(commanded: commanded, vgx: vgx, vgy: vgy, headingBody: heading(yaw),
+                       yawRaw: Double(yaw) * calibration.yawSign * .pi / 180)
+        guard let c = calibrator.result(base: calibration), c != calibration else { return false }
+        calibration = c
+        xCM = 0; yCM = 0
+        for s in log { integrate(vgx: s.vgx, vgy: s.vgy, yaw: s.yaw, dt: s.dt) }
+        return true
+    }
+
+    private mutating func integrate(vgx: Int, vgy: Int, yaw: Int, dt: Double) {
         let c = calibration
         let forward = Double(c.swapAxes ? vgy : vgx) * c.xSign * c.cmPerUnit
         let right = Double(c.swapAxes ? vgx : vgy) * c.ySign * c.cmPerUnit
-        let theta = c.bodyFrame ? heading(yaw) : 0
+        // Body frame: rotate by heading. World frame: velocities are in the power-on frame,
+        // rotate back by the takeoff yaw so x stays along the takeoff nose.
+        let theta = c.bodyFrame ? heading(yaw) : -Double(yawZero ?? 0) * c.yawSign * .pi / 180
         xCM += (forward * cos(theta) - right * sin(theta)) * dt
         yCM += (forward * sin(theta) + right * cos(theta)) * dt
     }
@@ -67,6 +89,7 @@ public struct DeadReckoner: Equatable, Sendable {
         isValid = true
         yawZero = nil
         lastAt = nil
+        log = []
     }
 
     /// Body-frame sticks pointing home, or nil once within `arriveCM`.
