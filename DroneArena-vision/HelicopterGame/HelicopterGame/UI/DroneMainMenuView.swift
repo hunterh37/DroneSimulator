@@ -107,9 +107,17 @@ struct DroneMainMenuView: View {
 #if os(visionOS)
         .overlay(alignment: .topTrailing) {
             if stage == .home {
-                Button("Live drone") {
+                Button {
                     Task { await LiveDroneMode.enter(appModel: appModel, openSpace: openImmersiveSpace, dismissSpace: dismissImmersiveSpace, openWindow: openWindow, dismissWindow: dismissWindow) }
+                } label: {
+                    Text("LIVE DRONE")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced)).tracking(1.2)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 18).padding(.vertical, 10)
+                        .background(Color.black, in: Capsule())
+                        .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
                 }
+                .buttonStyle(.plain)
                 .padding(24)
             }
         }

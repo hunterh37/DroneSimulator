@@ -19,3 +19,6 @@ User flow: Home > Live drone (closes sim space if open, opens live-drone space +
 
 ## Stage 3 done
 SafetyGovernor + TelloLink (statePort init arg, stateAt, safety, takeoffBlockedReason, governor) + banner in LiveDroneFeedView. Tests: 30 pass (SafetyGovernorTests, TelloE2ETests with MockTello on 127.0.0.1). App build succeeds. Not flown on hardware.
+
+## Design pass done
+LiveTheme, LiveHUD, LiveAltitudeTape, LiveControls, LiveDroneFeedView split; home button restyled. Sim + device builds succeed. Not run on device.
