@@ -44,6 +44,8 @@ public final class TelloLink {
     public var returnTimeout: TimeInterval = 45
     public static let returnSpeedLimit = 30
     private static let takeoverStick: Float = 0.2
+    private static let takeoverGrace: TimeInterval = 1
+    private var takeoverArmed = false
     private var returnStartedAt = Date.distantPast
 
     /// Master switch. When false, no rc packets go out.
@@ -87,6 +89,7 @@ public final class TelloLink {
     public func returnHome() {
         guard canReturnHome else { return }
         returnStartedAt = Date()
+        takeoverArmed = false
         returnStatus = .returning
     }
 
@@ -107,7 +110,9 @@ public final class TelloLink {
 
     public func disconnect() {
         timer?.invalidate(); timer = nil
-        cmdConn?.cancel(); cmdConn = nil
+        // Cancelling at once drops queued sends, e.g. the land sent just before Exit.
+        if let c = cmdConn { DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { c.cancel() } }
+        cmdConn = nil
         stateListener?.cancel(); stateListener = nil
         state = .disconnected
         cancelReturn()
@@ -139,10 +144,17 @@ public final class TelloLink {
         cancelReturn()
         sticks = .zero
         send("rc 0 0 0 0")
+        send("land")   // sent now so a disconnect right after (Exit) still delivers it
         if state == .flying { state = .connected }
         Task { [weak self] in
             guard let self else { return }
-            if !(await self.insist("land")) { self.commandFailure = "LAND NOT ACKNOWLEDGED" }
+            if await self.insist("land") { return }
+            self.commandFailure = "LAND NOT ACKNOWLEDGED"
+            // Keep stopping and landing until the drone answers: if it holds its last rc, one lost land leaves it moving.
+            for _ in 0..<15 where self.state != .flying && self.state != .disconnected {
+                self.send("rc 0 0 0 0")
+                if await self.insist("land", attempts: 1, gap: 1) { return }
+            }
         }
     }
 
@@ -263,7 +275,11 @@ public final class TelloLink {
             return false
         }
         let pilot = max(abs(sticks.yaw), abs(sticks.throttle), abs(sticks.roll), abs(sticks.pitch))
-        if now.timeIntervalSince(sticksAt) < staleAfter, pilot > Self.takeoverStick {
+        let deflected = now.timeIntervalSince(sticksAt) < staleAfter && pilot > Self.takeoverStick
+        // Pressing the Return chip deflects a hand stick, so takeover arms only after the sticks
+        // were released once, or after the grace period.
+        if !deflected || now.timeIntervalSince(returnStartedAt) > Self.takeoverGrace { takeoverArmed = true }
+        if deflected, takeoverArmed {
             returnStatus = .pilotTookOver
             return false
         }
@@ -279,9 +295,14 @@ public final class TelloLink {
             finishReturn(.arrived)
             return true
         }
-        let g = governor.apply(home, heightCM: heightCM, telemetryAge: now.timeIntervalSince(at))
+        // Scale only roll and pitch to the return cap, so the governor's ceiling descent keeps normal authority.
+        let scale = Float(min(speedLimit, Self.returnSpeedLimit)) / Float(max(1, speedLimit))
+        var slow = home
+        slow.roll *= scale
+        slow.pitch *= scale
+        let g = governor.apply(slow, heightCM: heightCM, telemetryAge: now.timeIntervalSince(at))
         safety = g.status
-        lastRC = g.sticks.rcCommand(limit: max(0, min(speedLimit, Self.returnSpeedLimit)), deadzone: deadzone)
+        lastRC = g.sticks.rcCommand(limit: max(0, min(100, speedLimit)), deadzone: deadzone)
         send(lastRC)
         keepAliveAt = now
         return true

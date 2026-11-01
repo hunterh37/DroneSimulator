@@ -16,6 +16,7 @@ final class MockTello: @unchecked Sendable {
     private let q = DispatchQueue(label: "mock.tello")
     private var statePacket: String?
     private var scripted: [String] = []
+    private var failing: [String: Int] = [:]
 
     // Sequential and below the ephemeral range: random ports collided with each other and with client sockets.
     nonisolated(unsafe) private static var nextPort = UInt16(20000 + getpid() % 10000)
@@ -29,6 +30,9 @@ final class MockTello: @unchecked Sendable {
         cmdPort = base
         statePort = base + 1
     }
+
+    /// Replies "error" to the next `count` commands starting with `prefix`, whatever else arrives meanwhile.
+    func fail(_ prefix: String, count: Int) { lock.lock(); failing[prefix] = count; lock.unlock() }
 
     /// The next replies, in order, before falling back to "ok".
     func script(_ replies: [String]) { lock.lock(); scripted = replies; lock.unlock() }
@@ -57,7 +61,11 @@ final class MockTello: @unchecked Sendable {
             if let data, let s = String(data: data, encoding: .utf8) {
                 self.lock.lock(); self.log.append(s); self.lock.unlock()
                 self.lock.lock()
-                let reply = self.scripted.isEmpty ? "ok" : self.scripted.removeFirst()
+                var reply = self.scripted.isEmpty ? "ok" : self.scripted.removeFirst()
+                if let k = self.failing.keys.first(where: { s.hasPrefix($0) }), self.failing[k]! > 0 {
+                    self.failing[k]! -= 1
+                    reply = "error"
+                }
                 self.lock.unlock()
                 c.send(content: Data(reply.utf8), completion: .contentProcessed { _ in })
             }
@@ -300,6 +308,50 @@ struct TelloE2ETests {
         link.takeoff()
         #expect(link.reckoner.xCM == 0)
         #expect(link.returnStatus == .idle)
+        link.disconnect(); m.stop()
+    }
+
+    /// Waits up to 8 s, for the multi-second land retry.
+    private func waitLong(_ cond: () -> Bool) async -> Bool {
+        for _ in 0..<320 {
+            if cond() { return true }
+            try? await Task.sleep(for: .milliseconds(25))
+        }
+        return cond()
+    }
+
+    @Test func landKeepsRetryingAfterOutage() async throws {
+        let (m, link) = try await makeFlying(h: 100)
+        #expect(await wait { m.commands.contains("takeoff") })
+        m.fail("land", count: 5)   // sync land, then 4 insist attempts
+        link.land()
+        // 6th land is the retry after the 4 insist attempts failed; the flag clears within ms of it succeeding.
+        #expect(await waitLong { m.commands(prefix: "land").count >= 6 })
+        #expect(await waitLong { link.commandFailure == nil })
+        link.disconnect(); m.stop()
+    }
+
+    @Test func landSurvivesImmediateDisconnect() async throws {
+        let (m, link) = try await makeFlying(h: 100)
+        link.land(); link.disconnect()
+        #expect(await wait { m.commands.contains("land") })
+        m.stop()
+    }
+
+    @Test func pinchOnReturnButtonDoesNotCancel() async throws {
+        let (m, link) = try await makeReturning()
+        link.update(fullUp)   // thumb deflection from pressing the chip, then released
+        try? await Task.sleep(for: .milliseconds(250))
+        #expect(link.returnStatus == .returning)
+        link.disconnect(); m.stop()
+    }
+
+    @Test func returnKeepsCeilingDescentAuthority() async throws {
+        let (m, link) = try await makeReturning(h: 320)
+        link.speedLimit = 100
+        #expect(await wait { lastC(m) == -24 })   // same as -0.3 throttle in normal flight
+        let rolls = m.commands(prefix: "rc ").compactMap { Int($0.split(separator: " ")[1]) }
+        #expect(rolls.allSatisfy { abs($0) <= TelloLink.returnSpeedLimit })
         link.disconnect(); m.stop()
     }
 
