@@ -44,10 +44,10 @@ struct HelicopterGameApp: App {
         .defaultSize(width: 600, height: 740)
        
 #if os(visionOS)
-        WindowGroup(id: "real-drone") {
-            RealDronePanel()
+        WindowGroup(id: "live-drone-feed") {
+            LiveDroneFeedView().environment(appModel)
         }
-        .windowResizability(.contentSize)
+        .defaultSize(width: 1100, height: 800)
 #endif
 
         WindowGroup(id: "joystick-help") {
@@ -69,5 +69,14 @@ struct HelicopterGameApp: App {
         }
         .immersionStyle(selection: .constant(.mixed), in: .mixed)
         .immersiveEnvironmentBehavior(.coexist)
+
+#if os(visionOS)
+        ImmersiveSpace(id: LiveDroneMode.spaceID) {
+            LiveDroneImmersiveView()
+                .environment(appModel)
+        }
+        .immersionStyle(selection: .constant(.mixed), in: .mixed)
+        .immersiveEnvironmentBehavior(.coexist)
+#endif
     }
 }

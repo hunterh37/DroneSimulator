@@ -13,6 +13,8 @@ final class RealDroneBridge {
 
     let link = TelloLink()
     var invertPitch = false
+    /// True only while Live Drone mode is open. Nothing is sent otherwise.
+    private(set) var isActive = false
     private(set) var sticks = DroneSticks.zero
     private var timer: Timer?
 
@@ -20,6 +22,7 @@ final class RealDroneBridge {
 
     func start() {
         guard timer == nil else { return }
+        isActive = true
         link.connect()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { _ in
             Task { @MainActor in RealDroneBridge.shared.sample() }
@@ -27,12 +30,16 @@ final class RealDroneBridge {
     }
 
     func stop() {
+        isActive = false
+        link.sticksEnabled = false
         link.land()
+        link.stopVideo()
         timer?.invalidate(); timer = nil
         link.disconnect()
     }
 
     private func sample() {
+        guard isActive else { return }
         let c = DualThumbController.shared
         let l = c.leftIsActive ? c.leftDirection * c.leftMagnitude : .zero
         let r = c.rightIsActive ? c.rightDirection * c.rightMagnitude : .zero

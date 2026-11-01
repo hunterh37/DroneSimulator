@@ -65,6 +65,10 @@ struct DroneMainMenuView: View {
 
 #if os(visionOS)
     @Environment(\.openWindow) private var openWindow
+#if os(visionOS)
+    @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
+#endif
 #endif
 
     var body: some View {
@@ -103,8 +107,10 @@ struct DroneMainMenuView: View {
 #if os(visionOS)
         .overlay(alignment: .topTrailing) {
             if stage == .home {
-                Button("Real drone") { openWindow(id: "real-drone") }
-                    .padding(24)
+                Button("Live drone") {
+                    Task { await LiveDroneMode.enter(appModel: appModel, openSpace: openImmersiveSpace, dismissSpace: dismissImmersiveSpace, openWindow: openWindow, dismissWindow: dismissWindow) }
+                }
+                .padding(24)
             }
         }
         .fullScreenCover(isPresented: $showPermissionsGate) {
