@@ -28,3 +28,10 @@ TelloConnector (idle, joiningWiFi, handshaking, ready, failed), PacketLog (200 r
 
 ## Return home done
 DeadReckoner + VelocityCalibration + ReturnStatus (DroneLink/DeadReckoner.swift). TelloLink: returnHome, canReturnHome, returnStatus, reckoner, returnTimeout, returnSpeedLimit. App: Return chip behind Debug, safety strip text, Home row in debug view. Tests: 61 pass. Calibration is assumed, not measured. Not flown. Task 4 of notes/PLAN-return-to-home.md is the remaining hardware gate.
+
+## Pinch stick package done
+`DroneArena-vision/HelicopterGame/DicyaninPinchStick/` (product `DicyaninPinchStick`, targets PinchStickCore, PinchStick). 10 core tests pass; visionOS build succeeds. Not yet linked to the app.
+Public API (import PinchStick):
+- `@MainActor final class PinchStickController`: `init()`, `var onOutput: ((PinchStickOutput) -> Void)?`, `var config: PinchStickConfig`, `var visualsEnabled: Bool`, `func start(rootEntity: Entity) async`, `func stop()`.
+- `struct PinchStickOutput { left, right: SIMD2<Float>; leftHeld, rightHeld: Bool }`. Left: x yaw, y throttle. Right: x roll, y pitch (forward positive). Fires on change only; zero on release, tracking loss, stop.
+- Integration: root entity at immersive space origin, ImmersiveSpace open, NSHandsTrackingUsageDescription set. Route onOutput to `DualThumbController.shared.setVirtualJoystickInput`; set old thumb input and visualizer off.
