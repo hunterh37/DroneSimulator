@@ -38,3 +38,6 @@ Public API (import PinchStick):
 
 ## Pinch stick integrated
 Package linked (product DicyaninPinchStick). Input/PinchStickRouter.swift gates old thumb input (ControlSchemeConfig.syncHandTrackingGate checks router). Sim ImmersiveView and LiveDroneImmersiveView start/stop it. RealDrone/LiveTouchSticks.swift 2D sticks in feed. Settings > Debug "Pinch stick visuals". App build succeeds. Not run on device or simulator.
+
+## Layout pass done
+Live feed: sticks 134 pt (+40 percent) with throw/deadzone rings, ticks, axis labels, value bars. Window 1280 wide: 4:3 video, black control deck below (stick | controls | stick), contentSize resizing. PinchStick ring already read config.fullThrow (PinchStickSystem.throwRadius unused). Device build succeeds. Not run on device.

@@ -10,10 +10,10 @@ struct LiveConnectButton: View {
     private var link: TelloLink { bridge.link }
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 8) {
+        VStack(spacing: 8) {
             if let line = message {
                 Text(line).font(LiveTheme.mono(12)).foregroundStyle(failed ? LiveTheme.danger : LiveTheme.textDim)
-                    .multilineTextAlignment(.trailing)
+                    .multilineTextAlignment(.center)
             }
             HStack(spacing: 14) {
                 dots

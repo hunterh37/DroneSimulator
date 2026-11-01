@@ -12,37 +12,54 @@ struct LiveDroneFeedView: View {
     private var link: TelloLink { bridge.link }
 
     var body: some View {
+        VStack(spacing: 0) {
+            videoPane
+            deck
+        }
+        .frame(width: 1280)
+        .background(LiveTheme.bg)
+        .preferredColorScheme(.dark)
+        .onDisappear { bridge.stop() }
+    }
+
+    private var videoPane: some View {
         ZStack {
             LiveTheme.bg
             TelloVideoView(stream: link.video)
             if link.video.fps <= 0 { noSignal }
         }
         .aspectRatio(4.0 / 3.0, contentMode: .fit)
+        .clipped()
         .overlay(alignment: .top) {
             VStack(spacing: 0) {
                 LiveTopBar(link: link, onExit: exit)
                 LiveSafetyStrip(link: link)
             }
         }
-        .overlay(alignment: .leading) { LiveAltitudeTape(heightCM: link.heightCM).padding(.leading, 16) }
+        .overlay(alignment: .leading) { LiveAltitudeTape(heightCM: link.heightCM).padding(.leading, 24) }
         .overlay(alignment: .trailing) {
-            if bridge.showDebug { LiveDebugView(bridge: bridge).padding(.top, 56).padding(.bottom, 130) }
+            if bridge.showDebug { LiveDebugView(bridge: bridge).padding(.top, 56).padding(.bottom, 24) }
         }
-        .overlay(alignment: .bottomLeading) {
-            VStack(alignment: .leading, spacing: 8) {
-                LiveStickReadout(sticks: bridge.sticks, rc: link.lastRC)
+    }
+
+    private var deck: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(LiveTheme.hairline).frame(height: 1)
+            HStack(alignment: .center, spacing: 16) {
                 LiveTouchStick(side: .left)
-            }.padding(16)
-        }
-        .overlay(alignment: .bottomTrailing) {
-            VStack(alignment: .trailing, spacing: 8) {
-                LiveControls(bridge: bridge)
+                Rectangle().fill(LiveTheme.hairline).frame(width: 1)
+                VStack(spacing: 8) {
+                    LiveControls(bridge: bridge)
+                    LiveLabel(link.lastRC, size: 11, color: LiveTheme.textFaint)
+                }
+                .frame(maxWidth: .infinity)
+                Rectangle().fill(LiveTheme.hairline).frame(width: 1)
                 LiveTouchStick(side: .right)
-            }.padding(16)
+            }
+            .padding(24)
         }
-        .background(LiveTheme.bg)
-        .preferredColorScheme(.dark)
-        .onDisappear { bridge.stop() }
+        .frame(maxWidth: .infinity)
+        .background(Color.black)
     }
 
     private var noSignal: some View {

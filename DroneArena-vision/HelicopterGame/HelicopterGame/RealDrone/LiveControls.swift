@@ -9,7 +9,7 @@ struct LiveControls: View {
     private var link: TelloLink { bridge.link }
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 8) {
+        VStack(spacing: 16) {
             LiveConnectButton(bridge: bridge)
             HStack(spacing: 8) {
                 Button("Arm") { link.sticksEnabled.toggle() }
