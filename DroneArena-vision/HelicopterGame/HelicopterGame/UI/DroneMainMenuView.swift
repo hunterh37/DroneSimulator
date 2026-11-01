@@ -63,6 +63,10 @@ struct DroneMainMenuView: View {
     }
 #endif
 
+#if os(visionOS)
+    @Environment(\.openWindow) private var openWindow
+#endif
+
     var body: some View {
         ZStack {
             ArenaBackdrop(tint: stage == .home ? Arena.volt : event.tint)
@@ -97,6 +101,12 @@ struct DroneMainMenuView: View {
         }
         .preferredColorScheme(.dark)
 #if os(visionOS)
+        .overlay(alignment: .topTrailing) {
+            if stage == .home {
+                Button("Real drone") { openWindow(id: "real-drone") }
+                    .padding(24)
+            }
+        }
         .fullScreenCover(isPresented: $showPermissionsGate) {
             DroneARKitPermissionsView(
                 onContinue: { resumeAfterPermissionsGate() }

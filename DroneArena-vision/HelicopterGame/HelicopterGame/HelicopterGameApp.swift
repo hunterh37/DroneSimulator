@@ -43,6 +43,13 @@ struct HelicopterGameApp: App {
         }
         .defaultSize(width: 600, height: 740)
        
+#if os(visionOS)
+        WindowGroup(id: "real-drone") {
+            RealDronePanel()
+        }
+        .windowResizability(.contentSize)
+#endif
+
         WindowGroup(id: "joystick-help") {
             ThumbJoystickHelpView(isPresented: .constant(true))
                 .frame(width: 600, height: 1200).fixedSize()

@@ -31,6 +31,8 @@
 	<false/>
 	<key>NSHandsTrackingUsageDescription</key>
 	<string>DroneArena uses hand tracking so you can fly drones with your hands.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>DroneArena sends flight commands to a Tello drone on your Wi-Fi.</string>
 	<key>NSWorldSensingUsageDescription</key>
 	<string>DroneArena uses world sensing to place the arena and drones in your surroundings.</string>
 	<key>UIApplicationSceneManifest</key>
