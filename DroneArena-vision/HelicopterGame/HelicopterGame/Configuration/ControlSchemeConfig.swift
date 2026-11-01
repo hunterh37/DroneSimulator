@@ -79,7 +79,8 @@ public enum ControlSchemeConfig {
     /// sole writer of the shared input channels.
     public static func syncHandTrackingGate(for scheme: DroneControlScheme = current) {
 #if os(visionOS)
-        DualThumbController.shared.isHandTrackingInputEnabled = scheme == .handJoystick
+        DualThumbController.shared.isHandTrackingInputEnabled =
+            scheme == .handJoystick && !PinchStickRouter.shared.isRunning
 #endif
     }
 

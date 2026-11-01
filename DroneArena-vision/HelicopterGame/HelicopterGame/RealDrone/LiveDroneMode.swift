@@ -50,23 +50,21 @@ enum LiveDroneMode {
 /// Mixed immersive space: thumb joystick visualizers and hand input only.
 struct LiveDroneImmersiveView: View {
     @Environment(AppModel.self) private var appModel
+    @State private var liveRoot: Entity?
 
     var body: some View {
         RealityView { content in
             let root = Entity()
             content.add(root)
-            let viz = ThumbControllerVisualizer.shared
-            viz.addToScene(root)
-            viz.startVisualization()
+            liveRoot = root
         }
         .task {
-            let c = DualThumbController.shared
-            c.isHandTrackingInputEnabled = true
-            try? await c.start()
+            try? await DualThumbController.shared.start()
+            if let root = liveRoot { await PinchStickRouter.shared.start(rootEntity: root) }
         }
         .onAppear { appModel.immersiveSpaceState = .open }
         .onDisappear {
-            ThumbControllerVisualizer.shared.removeFromScene()
+            PinchStickRouter.shared.stop()
             DualThumbController.shared.stop()
             appModel.immersiveSpaceState = .closed
         }

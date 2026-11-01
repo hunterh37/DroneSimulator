@@ -35,3 +35,6 @@ Public API (import PinchStick):
 - `@MainActor final class PinchStickController`: `init()`, `var onOutput: ((PinchStickOutput) -> Void)?`, `var config: PinchStickConfig`, `var visualsEnabled: Bool`, `func start(rootEntity: Entity) async`, `func stop()`.
 - `struct PinchStickOutput { left, right: SIMD2<Float>; leftHeld, rightHeld: Bool }`. Left: x yaw, y throttle. Right: x roll, y pitch (forward positive). Fires on change only; zero on release, tracking loss, stop.
 - Integration: root entity at immersive space origin, ImmersiveSpace open, NSHandsTrackingUsageDescription set. Route onOutput to `DualThumbController.shared.setVirtualJoystickInput`; set old thumb input and visualizer off.
+
+## Pinch stick integrated
+Package linked (product DicyaninPinchStick). Input/PinchStickRouter.swift gates old thumb input (ControlSchemeConfig.syncHandTrackingGate checks router). Sim ImmersiveView and LiveDroneImmersiveView start/stop it. RealDrone/LiveTouchSticks.swift 2D sticks in feed. Settings > Debug "Pinch stick visuals". App build succeeds. Not run on device or simulator.

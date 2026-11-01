@@ -34,6 +34,10 @@ final class MockTello: @unchecked Sendable {
     /// Replies "error" to the next `count` commands starting with `prefix`, whatever else arrives meanwhile.
     func fail(_ prefix: String, count: Int) { lock.lock(); failing[prefix] = count; lock.unlock() }
 
+    /// Commands starting with these prefixes get no reply (real Tello during takeoff climb).
+    private var muted: Set<String> = []
+    func mute(_ prefix: String) { lock.lock(); muted.insert(prefix); lock.unlock() }
+
     /// The next replies, in order, before falling back to "ok".
     func script(_ replies: [String]) { lock.lock(); scripted = replies; lock.unlock() }
 
@@ -66,8 +70,9 @@ final class MockTello: @unchecked Sendable {
                     self.failing[k]! -= 1
                     reply = "error"
                 }
+                let silent = self.muted.contains(where: { s.hasPrefix($0) })
                 self.lock.unlock()
-                c.send(content: Data(reply.utf8), completion: .contentProcessed { _ in })
+                if !silent { c.send(content: Data(reply.utf8), completion: .contentProcessed { _ in }) }
             }
             if err == nil { self.read(c) }
         }
@@ -161,6 +166,27 @@ struct TelloE2ETests {
             try? await Task.sleep(for: .milliseconds(25))
         }
         return cond()
+    }
+
+    /// Real Tello: motors spin, no reply until hover. Climbing telemetry counts as the ack,
+    /// and takeoff is sent once (a resend mid-climb gets "error").
+    @Test func takeoffAckedByClimbWithoutReply() async throws {
+        let m = MockTello(); try m.start()
+        m.pushState(h: 0)
+        let link = TelloLink(host: "127.0.0.1", port: m.cmdPort, statePort: m.statePort)
+        link.connect()
+        #expect(await wait { link.state == .connected && link.heightCM == 0 })
+        m.mute("takeoff")
+        link.takeoff()
+        #expect(await wait { m.commands.contains("takeoff") })
+        try? await Task.sleep(for: .milliseconds(1500))
+        m.pushState(h: 80)
+        #expect(await wait { link.heightCM == 80 })
+        try? await Task.sleep(for: .milliseconds(200))
+        #expect(link.state == .flying)
+        #expect(link.commandFailure == nil)
+        #expect(m.commands(prefix: "takeoff").count == 1)
+        link.disconnect(); m.stop()
     }
 
     @Test func connectSendsCommand() async throws {

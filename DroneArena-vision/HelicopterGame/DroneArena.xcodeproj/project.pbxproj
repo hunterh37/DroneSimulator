@@ -20,6 +20,7 @@
 		D3E0D1C2B3A4958677685940 /* DemoDirectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3E0D1C2B3A4958677685941 /* DemoDirectorTests.swift */; };
 		5D1000000000000000000003 /* DicyaninStageDirector in Frameworks */ = {isa = PBXBuildFile; productRef = 5D1000000000000000000002 /* DicyaninStageDirector */; };
 		D1AE00000000000000000003 /* DroneLink in Frameworks */ = {isa = PBXBuildFile; productRef = D1AE00000000000000000002 /* DroneLink */; };
+		D1AE00000000000000000013 /* DicyaninPinchStick in Frameworks */ = {isa = PBXBuildFile; productRef = D1AE00000000000000000012 /* DicyaninPinchStick */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,6 +99,7 @@
 				81D00F0F2E8D4BE500BC0FBC /* DicyaninThumbController in Frameworks */,
 				81D0FF010000000000000003 /* DicyaninVirtualJoystick in Frameworks */,
 				D1AE00000000000000000003 /* DroneLink in Frameworks */,
+				D1AE00000000000000000013 /* DicyaninPinchStick in Frameworks */,
 				5A1100000000000000000001 /* ShaderGraphCoder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -224,6 +226,7 @@
 				81D00F0E2E8D4BE500BC0FBC /* DicyaninThumbController */,
 				81D0FF010000000000000002 /* DicyaninVirtualJoystick */,
 				D1AE00000000000000000002 /* DroneLink */,
+				D1AE00000000000000000012 /* DicyaninPinchStick */,
 				5A1100000000000000000002 /* ShaderGraphCoder */,
 			);
 			productName = HelicopterGame;
@@ -287,6 +290,7 @@
 				81D00F0D2E8D4BE500BC0FBC /* XCLocalSwiftPackageReference "DicyaninThumbController" */,
 				81D0FF010000000000000001 /* XCLocalSwiftPackageReference "DicyaninVirtualJoystick" */,
 				D1AE00000000000000000001 /* XCLocalSwiftPackageReference "DroneLink" */,
+				D1AE00000000000000000011 /* XCLocalSwiftPackageReference "DicyaninPinchStick" */,
 				520791035171D0CBE443B613 /* XCLocalSwiftPackageReference "../../../ImmersiveTesting" */,
 				5A1100000000000000000003 /* XCRemoteSwiftPackageReference "ShaderGraphCoder" */,
 				5D1000000000000000000001 /* XCRemoteSwiftPackageReference "DicyaninStageDirector" */,
@@ -726,6 +730,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = DroneLink;
 		};
+		D1AE00000000000000000011 /* XCLocalSwiftPackageReference "DicyaninPinchStick" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = DicyaninPinchStick;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -794,6 +802,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D1AE00000000000000000001 /* XCLocalSwiftPackageReference "DroneLink" */;
 			productName = DroneLink;
+		};
+		D1AE00000000000000000012 /* DicyaninPinchStick */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1AE00000000000000000011 /* XCLocalSwiftPackageReference "DicyaninPinchStick" */;
+			productName = DicyaninPinchStick;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

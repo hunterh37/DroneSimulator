@@ -69,6 +69,7 @@ public struct SettingsView: View {
                 #if os(visionOS)
                 Section("Debug") {
                     SceneMeshDebugToggle()
+                    PinchVisualsToggle()
                 }
                 #endif
 

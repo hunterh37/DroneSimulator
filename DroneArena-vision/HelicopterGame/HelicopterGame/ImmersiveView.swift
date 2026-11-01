@@ -109,6 +109,7 @@ struct ImmersiveView: View {
                 gameLog("Failed to start input system: \(error)")
             }
         }
+        .task { await PinchStickRouter.shared.start(rootEntity: worldScene.rootEntity) }
         .onReceive(NotificationCenter.default.publisher(for: ControlSchemeConfig.didChangeNotification)) { _ in
             worldScene.applyControlScheme()
         }
@@ -123,6 +124,7 @@ struct ImmersiveView: View {
             }
         }
         .onDisappear {
+            PinchStickRouter.shared.stop()
             inputRouter.stopInputSystem()
             gestureCancellable?.cancel()
             handGestureManager.stop()

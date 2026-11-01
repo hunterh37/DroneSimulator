@@ -29,9 +29,17 @@ struct LiveDroneFeedView: View {
             if bridge.showDebug { LiveDebugView(bridge: bridge).padding(.top, 56).padding(.bottom, 130) }
         }
         .overlay(alignment: .bottomLeading) {
-            LiveStickReadout(sticks: bridge.sticks, rc: link.lastRC).padding(16)
+            VStack(alignment: .leading, spacing: 8) {
+                LiveStickReadout(sticks: bridge.sticks, rc: link.lastRC)
+                LiveTouchStick(side: .left)
+            }.padding(16)
         }
-        .overlay(alignment: .bottomTrailing) { LiveControls(bridge: bridge).padding(16) }
+        .overlay(alignment: .bottomTrailing) {
+            VStack(alignment: .trailing, spacing: 8) {
+                LiveControls(bridge: bridge)
+                LiveTouchStick(side: .right)
+            }.padding(16)
+        }
         .background(LiveTheme.bg)
         .preferredColorScheme(.dark)
         .onDisappear { bridge.stop() }

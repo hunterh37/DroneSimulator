@@ -134,7 +134,9 @@ public final class TelloLink {
         state = .flying
         Task { [weak self] in
             guard let self else { return }
-            if await self.insist("takeoff") { return }
+            // The Tello replies `ok` to takeoff only after it reaches hover (5 to 8 s),
+            // so wait long and accept climbing telemetry as the acknowledgement.
+            if await self.awaitSlow("takeoff", timeout: 12, maxResends: 1, done: { ($0.heightCM ?? 0) >= 30 }) { return }
             if self.state == .flying { self.state = .connected }
             self.commandFailure = "TAKEOFF NOT ACKNOWLEDGED"
         }
@@ -148,7 +150,7 @@ public final class TelloLink {
         if state == .flying { state = .connected }
         Task { [weak self] in
             guard let self else { return }
-            if await self.insist("land") { return }
+            if await self.awaitSlow("land", timeout: 10, maxResends: 8, done: { $0.heightCM == 0 }) { return }
             self.commandFailure = "LAND NOT ACKNOWLEDGED"
             // Keep stopping and landing until the drone answers: if it holds its last rc, one lost land leaves it moving.
             for _ in 0..<15 where self.state != .flying && self.state != .disconnected {
@@ -156,6 +158,33 @@ public final class TelloLink {
                 if await self.insist("land", attempts: 1, gap: 1) { return }
             }
         }
+    }
+
+    /// Slow motion commands (takeoff, land): send once, then wait up to `timeout` for `ok`
+    /// or for `done` to hold on telemetry. Resends (up to `maxResends`) only when the drone
+    /// answers `error` or `unkown command!`; silence means the motion is in progress.
+    @discardableResult
+    public func awaitSlow(_ cmd: String, timeout: TimeInterval, maxResends: Int,
+                          done: (TelloLink) -> Bool) async -> Bool {
+        var before = replyCount
+        send(cmd)
+        let start = Date()
+        var resends = 0
+        while Date().timeIntervalSince(start) < timeout {
+            if replyCount > before {
+                before = replyCount
+                if lastReply == "ok" { commandFailure = nil; return true }
+                if resends < maxResends,
+                   lastReply.hasPrefix("error") || lastReply.hasPrefix("unkown") {
+                    resends += 1
+                    try? await Task.sleep(for: .milliseconds(500))
+                    send(cmd)
+                }
+            }
+            if done(self) { commandFailure = nil; return true }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        return false
     }
 
     /// Sends `cmd` until the drone replies `ok`. The Tello often answers `unkown command!`
