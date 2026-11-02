@@ -43,8 +43,9 @@ struct LiveControls: View {
                         Toggle(isOn: $b.invertPitch) { LiveLabel("Invert pitch", color: LiveTheme.text) }
                         Toggle(isOn: $b.showDebug) { LiveLabel("Debug", color: LiveTheme.text) }
                         PinchVisualsToggle()
+                        StickDebugPanel()
                     }
-                    .padding(16).frame(width: 240)
+                    .padding(16).frame(width: 340)
                 }
             }
         }

@@ -63,6 +63,8 @@ public final class TelloLink {
 
     /// Master switch. When false, no rc packets go out.
     public var sticksEnabled = false
+    /// Debug: no rc rate gate, send on every stick change and every tick.
+    public var rawRC = false
     /// Per-axis output cap, 0...100. Lower = gentler.
     public var speedLimit = 80
     /// Input is already deadzoned by the stick source; this only drops float noise.
@@ -271,7 +273,7 @@ public final class TelloLink {
         sticksAt = now
         // Send stick changes right away, but never faster than sendRate (Tello queues excess rc packets).
         if changed, state == .flying, sticksEnabled, returnStatus != .returning,
-           now.timeIntervalSince(keepAliveAt) >= rcInterval { tick() }
+           rawRC || now.timeIntervalSince(keepAliveAt) >= rcInterval { tick() }
     }
 
     // MARK: internals
@@ -310,7 +312,7 @@ public final class TelloLink {
     private func tick() {
         let now = Date()
         // A stick change already sent this slot; skip the timer packet so the drone gets one rc per interval.
-        if state == .flying, now.timeIntervalSince(keepAliveAt) < rcInterval * 0.8 { return }
+        if !rawRC, state == .flying, now.timeIntervalSince(keepAliveAt) < rcInterval * 0.8 { return }
         if state != .flying {
             safety = .normal
             cancelReturn()

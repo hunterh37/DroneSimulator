@@ -49,7 +49,8 @@ public struct ObstacleMemory: Sendable {
         var added = false
         for o in obs {
             guard let d = o.distanceM, d < maxRangeM else { continue }
-            let p = pose.toWorld(forward: d, right: d * tan(o.bearing))
+            let p = pose.toWorld(forward: d, right: d * tan(max(-1.2, min(1.2, o.bearing))))
+            guard p.x.isFinite, p.y.isFinite else { continue }
             let r = o.kind == .wall ? 0.6 : max(0.15, (o.kind.widthM ?? 0.4) / 2)
             if let i = items.firstIndex(where: { simd_len($0.center - p) < mergeM }) {
                 items[i].center = items[i].center * 0.7 + p * 0.3

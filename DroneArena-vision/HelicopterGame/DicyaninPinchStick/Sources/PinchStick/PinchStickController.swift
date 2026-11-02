@@ -13,14 +13,15 @@ public final class PinchStickController {
     public var config = PinchStickConfig()
     public var thumbConfig = ThumbStickConfig()
     /// Pinch-drag sticks or thumb-on-index thumbsticks. Applies on next start.
-    public var mode: StickMode = .pinch
+    public var mode: StickMode = .thumb
     public var visualsEnabled = true {
         didSet { applyVisible() }
     }
 
-    private let session = ARKitSession()
-    private let hands = HandTrackingProvider()
-    private let world = WorldTrackingProvider()
+    // ARKit providers are single-use: a stopped session cannot run them again, so each start builds new ones.
+    private var session = ARKitSession()
+    private var hands = HandTrackingProvider()
+    private var world = WorldTrackingProvider()
     private var task: Task<Void, Never>?
     private var left = PinchStickMachine(side: .left)
     private var right = PinchStickMachine(side: .right)
@@ -53,6 +54,9 @@ public final class PinchStickController {
         leftEntity = l
         rightEntity = r
 
+        session = ARKitSession()
+        hands = HandTrackingProvider()
+        world = WorldTrackingProvider()
         do {
             try await session.run([hands, world])
         } catch {

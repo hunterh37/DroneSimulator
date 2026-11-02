@@ -10,6 +10,7 @@ struct LiveModeSwitch: View {
     var body: some View {
         HStack(spacing: 4) {
             segment(.joystick, "Manual", "gamecontroller.fill")
+            segment(.palm, "Palm", "hand.raised.fill")
             segment(.autonomous, "Auto", "location.north.line.fill")
         }
         .padding(4)
@@ -27,7 +28,7 @@ struct LiveModeSwitch: View {
                 Text(title.uppercased()).font(LiveTheme.mono(18, .bold)).tracking(2)
             }
             .foregroundStyle(on ? Color.black : LiveTheme.textDim)
-            .frame(width: 190, height: 52)
+            .frame(width: 160, height: 52)
             .background {
                 if on { Capsule().fill(tint).matchedGeometryEffect(id: "mode", in: ns) }
             }
@@ -35,6 +36,42 @@ struct LiveModeSwitch: View {
         }
         .buttonStyle(.plain)
         .hoverEffect(.highlight)
+    }
+}
+
+/// Palm mode column: grab state, live stick readout, land hold progress.
+struct LivePalmPanel: View {
+    let palm: PalmPilot
+    private let amber = Color(red: 1, green: 0.62, blue: 0.1)
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: palm.engaged ? "hand.pinch.fill" : "hand.raised")
+                .font(.system(size: 40, weight: .light))
+                .foregroundStyle(palm.engaged ? amber : LiveTheme.textDim)
+                .symbolEffect(.bounce, value: palm.engaged)
+            LiveLabel(palm.tracking ? (palm.engaged ? "Flying" : "Pinch right hand") : "No hand tracking",
+                      size: 15, color: palm.engaged ? amber : LiveTheme.text)
+            VStack(spacing: 4) {
+                row("THR", palm.sticks.throttle); row("YAW", palm.sticks.yaw)
+                row("PITCH", palm.sticks.pitch); row("ROLL", palm.sticks.roll)
+            }
+            if palm.landHold > 0 {
+                ProgressView(value: min(1, palm.landHold)).tint(.red).frame(width: 140)
+                LiveLabel("Landing", size: 11, color: .red)
+            } else {
+                LiveLabel("Hold left pinch to land", size: 11, color: LiveTheme.textFaint)
+            }
+        }
+        .frame(width: 180)
+    }
+
+    private func row(_ n: String, _ v: Float) -> some View {
+        HStack {
+            LiveLabel(n, size: 11, color: LiveTheme.textFaint)
+            Spacer()
+            Text(String(format: "%+.2f", v)).font(LiveTheme.mono(12)).foregroundStyle(LiveTheme.text)
+        }
     }
 }
 
@@ -47,7 +84,7 @@ struct LiveScanToggles: View {
             Button("Scan") { auto.scanEnabled.toggle() }.buttonStyle(LiveChipStyle(filled: auto.scanEnabled))
             Button("Brake") { auto.autoBrake.toggle() }
                 .buttonStyle(LiveChipStyle(filled: auto.autoBrake))
-                .disabled(auto.mode != .joystick)
+                .disabled(auto.mode == .autonomous)
             Button("Demo") { auto.demo.toggle() }.buttonStyle(LiveChipStyle(filled: auto.demo))
         }
     }

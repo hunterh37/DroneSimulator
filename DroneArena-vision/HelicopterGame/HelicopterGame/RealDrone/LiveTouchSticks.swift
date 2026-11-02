@@ -1,9 +1,14 @@
 #if os(visionOS)
-import DicyaninThumbController
 import SwiftUI
 
 /// On-screen drag stick. Left: x yaw, up throttle. Right: x roll, up pitch.
-/// Feeds DualThumbController only while dragging; release writes zero.
+/// Writes LiveTouchInput while dragging. Hand tracking cannot overwrite it.
+@MainActor final class LiveTouchInput {
+    static let shared = LiveTouchInput()
+    var left: SIMD2<Float>?
+    var right: SIMD2<Float>?
+}
+
 struct LiveTouchStick: View {
     enum Side { case left, right }
     let side: Side
@@ -91,19 +96,8 @@ struct LiveTouchStick: View {
     }
 
     private func send(_ v: SIMD2<Float>, held: Bool) {
-        let c = DualThumbController.shared
-        let mag = simd_length(v)
-        let dir: SIMD3<Float> = mag > 0 ? SIMD3(v.x / mag, v.y / mag, 0) : .zero
-        if side == .left {
-            c.setVirtualJoystickInput(leftDirection: dir, leftMagnitude: min(mag, 1), leftActive: held,
-                                      rightDirection: c.rightDirection, rightMagnitude: c.rightMagnitude,
-                                      rightActive: c.rightIsActive)
-        } else {
-            c.setVirtualJoystickInput(leftDirection: c.leftDirection, leftMagnitude: c.leftMagnitude,
-                                      leftActive: c.leftIsActive,
-                                      rightDirection: SIMD3(v.x, v.y, 0), rightMagnitude: min(mag, 1),
-                                      rightActive: held)
-        }
+        let t = LiveTouchInput.shared
+        if side == .left { t.left = held ? v : nil } else { t.right = held ? v : nil }
     }
 }
 #endif

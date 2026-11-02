@@ -23,10 +23,14 @@ final class ObstacleScanner: @unchecked Sendable {
 
     func decode(_ sample: CMSampleBuffer) {
         guard let fd = CMSampleBufferGetFormatDescription(sample) else { return }
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
         if session == nil || format.map({ !CMFormatDescriptionEqual($0, otherFormatDescription: fd) }) ?? true {
             makeSession(fd)
         }
+        let session = self.session
+        lock.unlock()
+        // Lock released before decode: VideoToolbox can call the handler synchronously,
+        // and offer() takes the same non-recursive lock (deadlock froze the feed on first detection).
         guard let session else { return }
         VTDecompressionSessionDecodeFrame(session, sampleBuffer: sample,
                                           flags: [._EnableAsynchronousDecompression],

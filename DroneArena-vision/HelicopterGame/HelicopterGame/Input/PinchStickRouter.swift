@@ -17,9 +17,9 @@ final class PinchStickRouter {
 
     /// Pinch-drag sticks or thumb-on-index 3D thumbsticks. Persisted; restarts live input.
     var mode: StickMode {
-        get { StickMode(rawValue: UserDefaults.standard.string(forKey: "stickMode") ?? "") ?? .pinch }
+        get { StickMode(rawValue: UserDefaults.standard.string(forKey: "stickMode.v2") ?? "") ?? .thumb }
         set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: "stickMode")
+            UserDefaults.standard.set(newValue.rawValue, forKey: "stickMode.v2")
             controller.mode = newValue
             guard isRunning, let root else { return }
             Task { await start(rootEntity: root) }
@@ -38,11 +38,24 @@ final class PinchStickRouter {
     }
 
     func start(rootEntity: Entity) async {
-        isRunning = true
         root = rootEntity
+        if StickDebugFlags.shared.legacyThumb { return }
+        isRunning = true
         controller.mode = mode
         DualThumbController.shared.isHandTrackingInputEnabled = false
         await controller.start(rootEntity: rootEntity)
+    }
+
+    /// Debug flag A: stop pinch sticks but remember the root for resume.
+    func suspend() {
+        guard isRunning else { return }
+        isRunning = false
+        controller.stop()
+    }
+
+    func resume() {
+        guard !isRunning, let root else { return }
+        Task { await start(rootEntity: root) }
     }
 
     func stop() {
@@ -55,11 +68,11 @@ final class PinchStickRouter {
     }
 
     private static func apply(_ o: PinchStickOutput) {
-        if DemoDirector.ownsInput { return }
+        if DemoDirector.ownsInput || StickDebugFlags.shared.legacyThumb { return }
         let l = o.left, r = o.right
         let lm = simd_length(l), rm = simd_length(r)
         let ld = lm > 0 ? SIMD3<Float>(l.x / lm, l.y / lm, 0) : .zero
-        let rd = SIMD3<Float>(r.x, r.y, 0)
+        let rd = rm > 0 ? SIMD3<Float>(r.x / rm, r.y / rm, 0) : .zero
         DualThumbController.shared.setVirtualJoystickInput(
             leftDirection: ld, leftMagnitude: lm, leftActive: o.leftHeld,
             rightDirection: rd, rightMagnitude: rm, rightActive: o.rightHeld)

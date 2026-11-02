@@ -1,5 +1,6 @@
 #if os(visionOS)
 import DicyaninThumbController
+import DroneLink
 import RealityKit
 import SwiftUI
 
@@ -64,12 +65,9 @@ struct LiveDroneImmersiveView: View {
             content.add(LiveWorldBuilder.make())
             liveRoot = root
         }
-        .gesture(SpatialTapGesture().targetedToAnyEntity().onEnded { v in
-            guard v.entity.name == "floor" else { return }
-            let p = v.convert(v.location3D, from: .local, to: .scene)
-            AutonomyController.shared.setTarget(LiveWorldComponent.fromScene(p))
-        })
-        .gesture(DragGesture(minimumDistance: 8).targetedToAnyEntity().onChanged { v in
+        // One gesture owns floor, pad and drone: a separate tap lost to the drag whenever the
+        // pinch drifted past the drag threshold. Releasing on the floor always sets the target.
+        .gesture(DragGesture(minimumDistance: 0).targetedToAnyEntity().onChanged { v in
             if v.entity.name == "pad" {
                 // Point the nose arrow at the hand: yaw 0 is -Z, positive turns toward -X.
                 let d = v.convert(v.location3D, from: .local, to: .scene) - LiveWorldComponent.home
@@ -83,8 +81,13 @@ struct LiveDroneImmersiveView: View {
             let b = v.convert(v.location3D, from: .local, to: .scene)
             // Horizontal only: home stays on the floor, height comes from telemetry.
             LiveWorldComponent.home = start + SIMD3(b.x - a.x, 0, b.z - a.z)
-        }.onEnded { _ in
+        }.onEnded { v in
             dragStartHome = nil
+            guard v.entity.name == "floor" else { return }
+            let p = v.convert(v.location3D, from: .local, to: .scene)
+            let t = LiveWorldComponent.fromScene(p)
+            FileLog.shared.write("auto", String(format: "floor tap %.2f %.2f mode %@", t.x, t.y, "\(AutonomyController.shared.mode)"))
+            AutonomyController.shared.setTarget(t)
         })
         .simultaneousGesture(RotateGesture3D(constrainedToAxis: .y).targetedToAnyEntity().onChanged { v in
             guard v.entity.name == "drone" || v.entity.name == "pad" else { return }

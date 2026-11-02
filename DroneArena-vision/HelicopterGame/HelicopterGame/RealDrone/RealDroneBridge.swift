@@ -26,6 +26,7 @@ final class RealDroneBridge {
         link = l
         connector = TelloConnector(link: l)
         connector.startsVideo = true
+        StickDebugFlags.shared.applyStored(link: l)
     }
 
     /// One-button connect: starts the stick sampler, then the connector flow.
@@ -56,7 +57,10 @@ final class RealDroneBridge {
 
     private func sample() {
         guard isActive else { return }
-        let s = AutonomyController.shared.tick(joystick: readJoystick(), link: link)
+        let j = readJoystick()
+        // Tick always so detections and red boxes update in every mode, even with flag B.
+        let a = AutonomyController.shared.tick(joystick: j, link: link)
+        let s = StickDebugFlags.shared.bypassAutonomy ? j : a
         if s != sticks { sticks = s }
         link.update(s)
     }
@@ -65,8 +69,11 @@ final class RealDroneBridge {
     /// right = pitch (y) + roll (x).
     func readJoystick() -> DroneSticks {
         let c = DualThumbController.shared
-        let l = c.leftIsActive ? c.leftDirection * c.leftMagnitude : .zero
-        let r = c.rightIsActive ? c.rightDirection * c.rightMagnitude : .zero
+        let t = LiveTouchInput.shared
+        let hl = c.leftIsActive ? c.leftDirection * c.leftMagnitude : .zero
+        let hr = c.rightIsActive ? c.rightDirection * c.rightMagnitude : .zero
+        let l = t.left.map { SIMD3($0.x, $0.y, 0) } ?? hl
+        let r = t.right.map { SIMD3($0.x, $0.y, 0) } ?? hr
         return DroneSticks(yaw: l.x, throttle: l.y, roll: r.x, pitch: invertPitch ? -r.y : r.y)
     }
 }

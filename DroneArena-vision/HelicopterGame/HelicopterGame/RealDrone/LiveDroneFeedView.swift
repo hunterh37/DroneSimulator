@@ -21,7 +21,13 @@ struct LiveDroneFeedView: View {
             header
             line
             HStack(spacing: 0) {
-                column { if auto.mode == .joystick { LiveTouchStick(side: .left) } else { LiveAutoPanel(auto: auto) } }
+                column {
+                    switch auto.mode {
+                    case .joystick: LiveTouchStick(side: .left)
+                    case .palm: LivePalmPanel(palm: PalmPilot.shared)
+                    case .autonomous: LiveAutoPanel(auto: auto)
+                    }
+                }
                 videoPane
                 column { if auto.mode == .joystick { LiveTouchStick(side: .right) } else { LiveObstaclePanel(auto: auto) } }
             }
@@ -32,7 +38,13 @@ struct LiveDroneFeedView: View {
         .background(LiveTheme.bg)
         .preferredColorScheme(.dark)
         .onAppear { auto.start(link: link) }
-        .onDisappear { bridge.stop(); auto.stop() }
+        .onChange(of: auto.mode, initial: true) { _, m in
+            if m == .palm {
+                PalmPilot.shared.onLand = { [link] in link.land() }
+                PalmPilot.shared.start()
+            } else { PalmPilot.shared.stop() }
+        }
+        .onDisappear { bridge.stop(); auto.stop(); PalmPilot.shared.stop() }
     }
 
     private var line: some View { Rectangle().fill(LiveTheme.hairline).frame(height: 1) }

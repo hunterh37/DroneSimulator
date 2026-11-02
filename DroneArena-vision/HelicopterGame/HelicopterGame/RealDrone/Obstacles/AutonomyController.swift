@@ -3,8 +3,9 @@ import DroneLink
 import Foundation
 import Observation
 import QuartzCore
+import simd
 
-enum ControlMode: String, CaseIterable { case joystick = "Joystick", autonomous = "Autonomous" }
+enum ControlMode: String, CaseIterable { case joystick = "Joystick", palm = "Palm", autonomous = "Autonomous" }
 
 /// Obstacle pipeline and autonomous flight. One tick per stick sample:
 /// pose -> detections -> tracker -> world memory -> replan -> follower or pilot sticks -> brake.
@@ -69,6 +70,8 @@ final class AutonomyController {
         cancelTarget()
     }
 
+    private var lastReplan: CFTimeInterval = 0
+
     func setTarget(_ p: SIMD2<Double>) {
         guard mode == .autonomous else { return }
         target = p
@@ -111,16 +114,29 @@ final class AutonomyController {
 
         var out: DroneSticks
         switch mode {
-        case .joystick:
-            out = joystick
+        case .joystick, .palm:
+            out = mode == .palm ? PalmPilot.shared.sticks : joystick
             let b = autoBrake && threat == .brake && out.pitch > 0
             if b != braking { braking = b }
             if b { out.pitch = 0 }
         case .autonomous:
-            if target != nil, let next = follower.path.dropFirst(follower.index).first,
-               PathPlanner.firstBlock(pose.xy, next, world, 0.35) != nil { rerouted = true; replan() }
+            // Replan on a new block, at most 2 Hz. A block the drone or target sits inside cannot be
+            // routed around; replanning it every tick reset the follower and froze the flight.
+            if let target, now - lastReplan > 0.5, let next = follower.path.dropFirst(follower.index).first,
+               let hit = PathPlanner.firstBlock(pose.xy, next, world, 0.35),
+               simd_distance(hit.obstacle.center, pose.xy) > hit.obstacle.radius + 0.35,
+               simd_distance(hit.obstacle.center, target) > hit.obstacle.radius + 0.35 {
+                rerouted = true; replan()
+            }
             out = follower.sticks(pose: pose)
-            if braking { braking = false }
+            // Auto brake runs in both modes: a live detection in front stops forward motion
+            // even when the planned path (built from remembered obstacles) says go.
+            let b = autoBrake && threat == .brake && out.pitch > 0
+            if b != braking { braking = b }
+            if b {
+                out.pitch = 0
+                if now - lastReplan > 0.5 { rerouted = true; replan() }
+            }
             if follower.isDone, target != nil { cancelTarget() }
             // Demo: a pole pops up mid-flight to show live rerouting.
             if demo, target != nil, !demoPopped, PathPlanner.length(path) > 3 {
@@ -135,9 +151,11 @@ final class AutonomyController {
 
     private func replan() {
         guard let target else { return }
+        lastReplan = CACurrentMediaTime()
         let p = PathPlanner.plan(from: pose.xy, to: target, obstacles: world)
         follower.set(p)
         path = p
+        FileLog.shared.write("auto", "plan \(p.count) pts, \(world.count) obstacles")
         pathVersion += 1
     }
 
